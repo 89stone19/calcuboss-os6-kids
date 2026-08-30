@@ -1,0 +1,6 @@
+{
+  "name": "Calcuboss Apostolic Academy OS6",
+  "description": "AI Teacher Squad with Kids Puzzle Pack, Question Caching, Voice Synthesis, and Parent Community.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
