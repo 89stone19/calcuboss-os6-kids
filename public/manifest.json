@@ -1,6 +1,7 @@
 {
   "name": "Calcuboss OS6 Kids",
   "short_name": "Calcuboss OS6",
+  "description": "Grade R-12 learning OS with calculator, academy, and study tools for South African kids",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0a0a0a",
