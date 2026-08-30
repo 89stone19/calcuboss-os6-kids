@@ -41,19 +41,19 @@ export const LifeCanvas: React.FC<{ isVoiceEnabled?: boolean }> = ({ isVoiceEnab
 
   // Galleries
   const princessGallery = {
-    plain: '/src/assets/images/princess_plain_1788121455741.jpg',
-    crown: '/src/assets/images/princess_avatar_1788120388641.jpg',
-    shorthair: '/src/assets/images/princess_shorthair_1788121470129.jpg'
+    plain: '/princess/princess-plain.png',
+    crown: '/princess/princess-crown.png',
+    shorthair: '/princess/princess-short.png'
   };
 
   const lamboGallery = {
-    clean: '/src/assets/images/lambo_supercar_1788120400724.jpg',
-    stripes: '/src/assets/images/lambo_stripes_1788121483048.jpg'
+    clean: '/images/lambo_clean.jpg',
+    stripes: '/images/lambo_stripes.jpg'
   };
 
   const bakeryGallery = {
-    plain: '/src/assets/images/cupcake_bakery_1788121079160.jpg',
-    topped: '/src/assets/images/cupcake_topped_1788121496035.jpg'
+    plain: '/images/cupcake_plain.jpg',
+    topped: '/images/cupcake_topped.jpg'
   };
 
   // Audio Context Ref
@@ -418,7 +418,7 @@ export const LifeCanvas: React.FC<{ isVoiceEnabled?: boolean }> = ({ isVoiceEnab
           <div className="w-full h-full relative flex items-center justify-center animate-in fade-in duration-300">
             {/* Pixar Star Flight Base Render */}
             <img 
-              src="/src/assets/images/star_flight_1788120412017.jpg" 
+              src="/images/star_flight.jpg" 
               alt="3D Pixar Cartoon Rocket Flight"
               referrerPolicy="no-referrer"
               className="w-full h-full object-cover select-none absolute inset-0 opacity-80"
