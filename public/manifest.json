@@ -1,22 +1,21 @@
 {
+  "id": "/",
   "name": "Calcuboss OS6 Kids",
-  "short_name": "Calcuboss OS6",
+  "short_name": "Calcuboss",
   "description": "Grade R-12 learning OS with calculator, academy, and study tools for South African kids",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#0a0a0a",
   "theme_color": "#FFD700",
-  "scope": "/",
+  "categories": ["education"],
   "icons": [
-    {
-      "src": "/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png"
-    }
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "screenshots": [
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "form_factor": "wide", "label": "Calcuboss OS6 Home" },
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "form_factor": "narrow", "label": "Calcuboss OS6 App" }
   ]
 }
