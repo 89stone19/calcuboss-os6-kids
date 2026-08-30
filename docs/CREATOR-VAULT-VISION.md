@@ -1,6 +1,7 @@
 # OS6 Kids Creator Trust™ & Creator Vault Vision
 **Timestamp:** 2026-08-30
 **Founder / Creator:** Derol Willis (`@DerolWillis` / `willisderol@gmail.com`)  
+**Location / HQ:** Pretoria, South Africa 🇿🇦  
 **Project:** `calcuboss-os6-kids` — Calcuboss OS6 Apostolic Academy  
 **Legal Brand:** OS6 Kids Creator Trust™
 

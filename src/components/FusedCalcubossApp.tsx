@@ -830,7 +830,7 @@ export const FusedCalcubossApp: React.FC = () => {
       )}
 
       <footer className="py-4 text-center text-[11px] text-slate-500 border-t border-slate-900 mt-4">
-        Calcuboss Apostolic Academy OS6 • Kids Chat & Puzzle Pack 🧩
+        Calcuboss OS6 Kids • AI Learning + Creator Trust Vault™ by @DerolWillis 🧩👑
       </footer>
       {/* ONBOARDING & PROFILE SETUP MODAL */}
       {showProfileSetup && (
