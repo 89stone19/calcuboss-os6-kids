@@ -1,7 +1,7 @@
 {
   "name": "Calcuboss OS6 Kids",
   "short_name": "Calcuboss OS6",
-  "description": "South African AI kids OS. Built in Pretoria.",
+  "description": "South African AI kids OS. Built in Pretoria."
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0a0a0a",
