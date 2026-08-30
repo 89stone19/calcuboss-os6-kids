@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 750 1334" width="750" height="1334">
+  <!-- Background -->
+  <rect width="750" height="1334" fill="#0A0A0C" />
+  <!-- Calcuboss gold crown / graphic centered -->
+  <g transform="translate(119, 320)">
+    <!-- Crown -->
+    <path d="M 180 180 L 210 135 L 256 160 L 302 135 L 332 180 C 300 195 212 195 180 180 Z" fill="#F5C242" />
+    <circle cx="210" cy="130" r="12" fill="#F5C242" />
+    <circle cx="256" cy="115" r="14" fill="#F5C242" />
+    <circle cx="302" cy="130" r="12" fill="#F5C242" />
+    <!-- Crown base curve -->
+    <path d="M 185 182 Q 256 200 327 182 Q 330 196 325 200 Q 256 215 187 200 Z" fill="#E5B232" />
+    <!-- Letter C -->
+    <path d="M 325 255 C 300 220 230 220 200 260 C 165 310 165 390 205 435 C 245 475 320 465 345 425 C 352 414 340 400 325 408 C 295 435 235 435 215 400 C 190 355 195 295 228 265 C 255 240 300 242 320 270 C 326 278 340 272 335 262 Z" fill="#F5C242" />
+  </g>
+  <!-- Beautiful Typography -->
+  <text x="375" y="880" font-family="system-ui, sans-serif" font-weight="900" font-size="46" fill="#FFD700" text-anchor="middle" letter-spacing="4">CALCUBOSS OS6</text>
+  <text x="375" y="930" font-family="system-ui, sans-serif" font-weight="500" font-size="22" fill="#A0A0AB" text-anchor="middle">Apostolic Academy Learning OS</text>
+</svg>

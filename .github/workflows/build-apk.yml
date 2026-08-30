@@ -14,9 +14,9 @@ jobs:
           java-version: '17'
       - name: Install deps and build web
         run: |
-          npm ci
+          npm install --legacy-peer-deps
           npm run build
-          npx cap sync android
+          npx cap sync android --deployment
       - name: Build APK
         run: |
           cd android
