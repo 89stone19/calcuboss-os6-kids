@@ -5,6 +5,7 @@ import { PuzzleGame } from './PuzzleGame';
 import { ParentCommunity } from './ParentCommunity';
 import { ParentDashboard } from './ParentDashboard';
 import { KidsCreatorVault } from './KidsCreatorVault';
+import { LifeCanvas } from './LifeCanvas';
 
 const SUPABASE_URL = (import.meta as any).env?.VITE_SUPABASE_URL || "https://your-supabase-url.supabase.co";
 const SUPABASE_ANON_KEY = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || "your-anon-key";
@@ -62,7 +63,7 @@ export const FusedCalcubossApp: React.FC = () => {
   const [inputGrade, setInputGrade] = useState(profile.grade);
   const [inputRole, setInputRole] = useState<UserRole>(profile.role);
 
-  const [activeTab, setActiveTab] = useState<'chat' | 'profit' | 'community' | 'puzzles' | 'vault'>('chat');
+  const [activeTab, setActiveTab] = useState<'chat' | 'profit' | 'community' | 'puzzles' | 'vault' | 'canvas'>('chat');
   const [selectedTeacher, setSelectedTeacher] = useState(TEACHERS[0]);
   const [messages, setMessages] = useState<{ role: 'bot' | 'user'; text: string; model?: string; isOfflineFallback?: boolean }[]>([]);
   const [inputMsg, setInputMsg] = useState('');
@@ -498,7 +499,7 @@ export const FusedCalcubossApp: React.FC = () => {
         </div>
 
         {/* Sub Navigation Tabs */}
-        <div className="grid grid-cols-5 gap-1 pt-2 border-t border-slate-800 text-[11px]">
+        <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5 pt-2 border-t border-slate-800 text-[11px]">
           <button 
             onClick={() => setActiveTab('chat')} 
             className={`py-1.5 rounded-xl font-bold transition text-center ${activeTab === 'chat' ? 'bg-indigo-600 text-white shadow' : 'bg-slate-800/60 text-slate-400 hover:text-white'}`}
@@ -506,10 +507,16 @@ export const FusedCalcubossApp: React.FC = () => {
             💬 Chat
           </button>
           <button 
-            onClick={() => setActiveTab('profit')} 
-            className={`py-1.5 rounded-xl font-bold transition text-center ${activeTab === 'profit' ? 'bg-indigo-600 text-white shadow' : 'bg-slate-800/60 text-slate-400 hover:text-white'}`}
+            onClick={() => setActiveTab('canvas')} 
+            className={`py-1.5 rounded-xl font-bold transition text-center ${activeTab === 'canvas' ? 'bg-indigo-600 text-white shadow' : 'bg-slate-800/60 text-slate-400 hover:text-white'}`}
           >
-            📊 Stats
+            🎨 Canvas
+          </button>
+          <button 
+            onClick={() => setActiveTab('puzzles')} 
+            className={`py-1.5 rounded-xl font-bold transition text-center ${activeTab === 'puzzles' ? 'bg-indigo-600 text-white shadow' : 'bg-slate-800/60 text-slate-400 hover:text-white'}`}
+          >
+            🧩 Game
           </button>
           <button 
             onClick={() => setActiveTab('community')} 
@@ -518,10 +525,10 @@ export const FusedCalcubossApp: React.FC = () => {
             👥 Feed
           </button>
           <button 
-            onClick={() => setActiveTab('puzzles')} 
-            className={`py-1.5 rounded-xl font-bold transition text-center ${activeTab === 'puzzles' ? 'bg-indigo-600 text-white shadow' : 'bg-slate-800/60 text-slate-400 hover:text-white'}`}
+            onClick={() => setActiveTab('profit')} 
+            className={`py-1.5 rounded-xl font-bold transition text-center ${activeTab === 'profit' ? 'bg-indigo-600 text-white shadow' : 'bg-slate-800/60 text-slate-400 hover:text-white'}`}
           >
-            🧩 Game
+            📊 Stats
           </button>
           <button 
             onClick={() => setActiveTab('vault')} 
@@ -666,6 +673,7 @@ export const FusedCalcubossApp: React.FC = () => {
         {activeTab === 'community' && <ParentCommunity />}
         {activeTab === 'puzzles' && <PuzzleGame />}
         {activeTab === 'vault' && <KidsCreatorVault />}
+        {activeTab === 'canvas' && <LifeCanvas isVoiceEnabled={isVoiceEnabled} />}
       </main>
 
       {/* VIP & PRICING PLAN MODAL */}
