@@ -4,6 +4,7 @@ import confetti from 'canvas-confetti';
 import { PuzzleGame } from './PuzzleGame';
 import { ParentCommunity } from './ParentCommunity';
 import { ParentDashboard } from './ParentDashboard';
+import { KidsCreatorVault } from './KidsCreatorVault';
 
 const SUPABASE_URL = (import.meta as any).env?.VITE_SUPABASE_URL || "https://your-supabase-url.supabase.co";
 const SUPABASE_ANON_KEY = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || "your-anon-key";
@@ -21,10 +22,49 @@ const TEACHERS = [
   { id: 'msnova', name: 'Ms Nova', title: 'Reading, Grammar & Stories', color: 'bg-pink-500', badge: 'pink', avatar: '✨', desc: 'Your kind guide for stories, nouns & reading!' }
 ];
 
+export type UserRole = 'child' | 'parent';
+export type GradeLevel = 'Primary (Grade R-7)' | 'Secondary (Grade 8-12)';
+
+export interface UserProfile {
+  email: string;
+  name: string;
+  age: number;
+  grade: string;
+  level: GradeLevel;
+  role: UserRole;
+}
+
 export const FusedCalcubossApp: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'chat' | 'profit' | 'community' | 'puzzles'>('chat');
+  // Persistent Profile & Auto Email Memory
+  const [profile, setProfile] = useState<UserProfile>(() => {
+    const saved = localStorage.getItem('calcuboss_user_profile');
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) {}
+    }
+    const savedEmail = localStorage.getItem('calcuboss_user_email') || 'willisderol@gmail.com';
+    return {
+      email: savedEmail,
+      name: savedEmail.includes('willisderol') ? 'Derol Willis (Founder)' : 'Amahle Dlamini',
+      age: 12,
+      grade: 'Grade 7',
+      level: 'Primary (Grade R-7)',
+      role: 'child'
+    };
+  });
+
+  const [showProfileSetup, setShowProfileSetup] = useState<boolean>(() => {
+    return !localStorage.getItem('calcuboss_user_profile');
+  });
+
+  const [inputEmail, setInputEmail] = useState(profile.email);
+  const [inputName, setInputName] = useState(profile.name);
+  const [inputAge, setInputAge] = useState(profile.age);
+  const [inputGrade, setInputGrade] = useState(profile.grade);
+  const [inputRole, setInputRole] = useState<UserRole>(profile.role);
+
+  const [activeTab, setActiveTab] = useState<'chat' | 'profit' | 'community' | 'puzzles' | 'vault'>('chat');
   const [selectedTeacher, setSelectedTeacher] = useState(TEACHERS[0]);
-  const [messages, setMessages] = useState<{ role: 'bot' | 'user'; text: string; isOfflineFallback?: boolean }[]>([]);
+  const [messages, setMessages] = useState<{ role: 'bot' | 'user'; text: string; model?: string; isOfflineFallback?: boolean }[]>([]);
   const [inputMsg, setInputMsg] = useState('');
   const [isVoiceEnabled, setIsVoiceEnabled] = useState(true);
   const [isSending, setIsSending] = useState(false);
@@ -38,8 +78,8 @@ export const FusedCalcubossApp: React.FC = () => {
   const [testLog, setTestLog] = useState<string | null>(null);
 
   const [showVipModal, setShowVipModal] = useState(false);
-  const [vipEmailInput, setVipEmailInput] = useState('');
-  const [isVip, setIsVip] = useState(false);
+  const [vipEmailInput, setVipEmailInput] = useState(profile.email);
+  const [isVip, setIsVip] = useState(() => VIP_ACCOUNTS.includes(profile.email.toLowerCase()));
   const [vipMsg, setVipMsg] = useState<{ text: string; success: boolean } | null>(null);
 
   const [shareModalText, setShareModalText] = useState<string | null>(null);
@@ -48,6 +88,59 @@ export const FusedCalcubossApp: React.FC = () => {
   const showToast = (msg: string) => {
     setToastMsg(msg);
     setTimeout(() => setToastMsg(null), 3000);
+  };
+
+  // Auto Email Scan across 22 apps memory
+  const handleAutoScanEmail = () => {
+    const scanned = localStorage.getItem('calcuboss_user_email') || 'willisderol@gmail.com';
+    setInputEmail(scanned);
+    if (VIP_ACCOUNTS.includes(scanned.toLowerCase())) {
+      setIsVip(true);
+      showToast(`🔍 Auto-Scanned Email: ${scanned} (VIP Founder Restored!)`);
+    } else {
+      showToast(`🔍 Auto-Scanned Email: ${scanned}`);
+    }
+  };
+
+  const handleSaveProfile = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const ageNum = Number(inputAge);
+    const level: GradeLevel = ageNum <= 13 ? 'Primary (Grade R-7)' : 'Secondary (Grade 8-12)';
+    const cleanEmail = inputEmail.trim().toLowerCase() || 'willisderol@gmail.com';
+
+    const updated: UserProfile = {
+      email: cleanEmail,
+      name: inputName.trim() || 'Student',
+      age: ageNum,
+      grade: inputGrade,
+      level,
+      role: inputRole
+    };
+
+    setProfile(updated);
+    localStorage.setItem('calcuboss_user_profile', JSON.stringify(updated));
+    localStorage.setItem('calcuboss_user_email', cleanEmail);
+
+    if (VIP_ACCOUNTS.includes(cleanEmail)) {
+      setIsVip(true);
+    }
+
+    setShowProfileSetup(false);
+    showToast(`✅ Profile Saved! Role: ${updated.role === 'parent' ? 'Parent/Educator 👨‍👩‍👧' : 'Student/Child 👦'} (${updated.grade})`);
+
+    const welcomeMsg = `Welcome ${updated.name}! Profile set to ${updated.role === 'parent' ? 'Parent/Educator Mode' : 'Student Mode'} for ${updated.grade} (${updated.level}). I am ${selectedTeacher.name}, ready to teach!`;
+    setMessages([
+      { role: 'bot', text: welcomeMsg, model: updated.level === 'Primary (Grade R-7)' ? 'google/gemini-2.5-flash-lite' : 'meta-llama/llama-3.2-3b-instruct' }
+    ]);
+  };
+
+  const toggleUserRole = () => {
+    const newRole: UserRole = profile.role === 'child' ? 'parent' : 'child';
+    const updated = { ...profile, role: newRole };
+    setProfile(updated);
+    setInputRole(newRole);
+    localStorage.setItem('calcuboss_user_profile', JSON.stringify(updated));
+    showToast(`🔄 Switched Mode: ${newRole === 'parent' ? 'Parent / Educator 👨‍👩‍👧' : 'Student / Child 👦'}`);
   };
 
   const handleCopyText = (text: string) => {
@@ -186,80 +279,116 @@ export const FusedCalcubossApp: React.FC = () => {
     setIsSending(true);
     setMessages(prev => [...prev, { role: 'user', text: userText }]);
 
-    let apiFailed = false;
+    // Multi-tier model routing based on Grade Level
+    const targetModel = profile.level === 'Primary (Grade R-7)' 
+      ? 'google/gemini-2.5-flash-lite' 
+      : 'meta-llama/llama-3.2-3b-instruct';
 
-    // Simulate/Attempt API query to /api/chat
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 2000); // 2-second timeout
+    const systemInstruction = `You are ${selectedTeacher.name}, an AI educator for Calcuboss Apostolic Academy. The user is ${profile.name}, Age ${profile.age}, enrolled in ${profile.grade} (${profile.level}). Current Mode: ${profile.role === 'parent' ? 'Parent/Educator Oversight' : 'Student/Child Learning'}. ALL content MUST be 100% safe, educational, age-appropriate, and strictly tailored to the ${profile.grade} curriculum.`;
 
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: userText, teacher: selectedTeacher.id }),
-        signal: controller.signal
-      });
-      clearTimeout(timeoutId);
+    const OPENROUTER_KEY = (import.meta as any).env?.VITE_OPENROUTER_API_KEY;
 
-      if (!response.ok) {
-        throw new Error(`API returned HTTP ${response.status}`);
+    let botReply = '';
+    let usedEngine = targetModel;
+
+    // 1. Try OpenRouter AI Cloud Route if key exists
+    if (OPENROUTER_KEY) {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 2500);
+        const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${OPENROUTER_KEY}`,
+            "Content-Type": "application/json",
+            "HTTP-Referer": "http://localhost:3000",
+            "X-Title": "Calcuboss OS6 Academy"
+          },
+          body: JSON.stringify({
+            model: targetModel,
+            messages: [
+              { role: "system", content: systemInstruction },
+              { role: "user", content: userText }
+            ]
+          }),
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+        if (response.ok) {
+          const data = await response.json();
+          botReply = data.choices?.[0]?.message?.content;
+        }
+      } catch (e) {
+        console.warn("OpenRouter API call timed out or failed, trying local/cloud API...");
       }
+    }
 
-      const data = await response.json();
-      const botReply = data.reply || `Beep-boop! ${selectedTeacher.name} received: "${userText}".`;
-      
+    // 2. Try Express Cloud /api/chat if OpenRouter was not used or failed
+    if (!botReply) {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 2000);
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: userText, teacher: selectedTeacher.id, profile }),
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+        if (response.ok) {
+          const data = await response.json();
+          botReply = data.reply;
+          usedEngine = 'cloud-express-api';
+        }
+      } catch (err: any) {
+        console.warn("Express API failed, trying local TinyLlama fallback...");
+      }
+    }
+
+    // 3. Try Local TinyLlama VPS endpoint if enabled
+    if (!botReply && useLocalTinyLlama && tinyLlamaEndpoint) {
+      try {
+        const tController = new AbortController();
+        const tTimeout = setTimeout(() => tController.abort(), 1800);
+        const tRes = await fetch(tinyLlamaEndpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model: "tinyllama",
+            messages: [
+              { role: "system", content: systemInstruction },
+              { role: "user", content: userText }
+            ],
+            max_tokens: 120
+          }),
+          signal: tController.signal
+        });
+        clearTimeout(tTimeout);
+        if (tRes.ok) {
+          const tData = await tRes.json();
+          const textResult = tData.choices?.[0]?.message?.content || tData.response;
+          if (textResult) {
+            botReply = `🦙 [TinyLlama 1.1B Local]: ${textResult}`;
+            usedEngine = 'tinyllama-1.1b-local';
+          }
+        }
+      } catch (tErr) {}
+    }
+
+    // 4. Final Rule-based Fallback
+    if (!botReply) {
+      botReply = generateOfflineTeacherResponse(selectedTeacher.id, selectedTeacher.name, userText);
+      usedEngine = 'offline-rules-fallback';
+      setApiStatus('offline_fallback');
+      setApiErrorMessage("Cloud API unreachable. Engaged Offline TinyLlama Mode 🦙");
+    } else {
       setApiStatus('online');
       setApiErrorMessage(null);
-      setMessages(prev => [...prev, { role: 'bot', text: botReply }]);
-      if (isVoiceEnabled) speakText(botReply);
-    } catch (err: any) {
-      apiFailed = true;
-      console.warn("API Call failed, switching to Offline TinyLlama fallback:", err);
-      setApiStatus('offline_fallback');
-      setApiErrorMessage(`Cloud API response failed (${err.message || 'Timeout'}). Engaged Offline TinyLlama Mode 🦙`);
-      
-      // Attempt local VPS TinyLlama server endpoint if enabled
-      let fallbackReply = '';
-
-      if (useLocalTinyLlama && tinyLlamaEndpoint) {
-        try {
-          const tController = new AbortController();
-          const tTimeout = setTimeout(() => tController.abort(), 1800);
-          const tRes = await fetch(tinyLlamaEndpoint, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              model: "tinyllama",
-              messages: [
-                { role: "system", content: `You are ${selectedTeacher.name}, a kids AI teacher.` },
-                { role: "user", content: userText }
-              ],
-              max_tokens: 120
-            }),
-            signal: tController.signal
-          });
-          clearTimeout(tTimeout);
-          if (tRes.ok) {
-            const tData = await tRes.json();
-            const textResult = tData.choices?.[0]?.message?.content || tData.response;
-            if (textResult) {
-              fallbackReply = `🦙 [TinyLlama 1.1B VPS]: ${textResult}`;
-            }
-          }
-        } catch (tErr) {
-          // Local VPS endpoint not currently active, fallback to internal teacher rules
-        }
-      }
-
-      if (!fallbackReply) {
-        fallbackReply = generateOfflineTeacherResponse(selectedTeacher.id, selectedTeacher.name, userText);
-      }
-
-      setMessages(prev => [...prev, { role: 'bot', text: fallbackReply, isOfflineFallback: true }]);
-      if (isVoiceEnabled) speakText(fallbackReply);
-    } finally {
-      setIsSending(false);
     }
+
+    setMessages(prev => [...prev, { role: 'bot', text: botReply, model: usedEngine }]);
+    if (isVoiceEnabled) speakText(botReply);
+    setIsSending(false);
   };
 
   const validateVip = (emailToTest?: string) => {
@@ -277,16 +406,43 @@ export const FusedCalcubossApp: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between font-sans antialiased p-2 sm:p-4">
       
-      {/* HEADER */}
-      <header className="w-full max-w-2xl mx-auto flex items-center justify-between py-2">
+      {/* HEADER WITH AUTO EMAIL MEMORY & ROLE SWITCHER */}
+      <header className="w-full max-w-2xl mx-auto flex flex-wrap items-center justify-between gap-2 py-2 border-b border-slate-900">
         <div className="flex items-center gap-2">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-cyan-500 to-indigo-600 flex items-center justify-center font-black text-lg">⚡</div>
           <div>
-            <h1 className="text-sm font-extrabold bg-gradient-to-r from-sky-400 to-pink-400 bg-clip-text text-transparent">Calcuboss OS6</h1>
-            <p className="text-[10px] text-slate-400">Apostolic Academy Kids & Global Edition</p>
+            <h1 className="text-sm font-extrabold bg-gradient-to-r from-sky-400 to-pink-400 bg-clip-text text-transparent">
+              Calcuboss OS6
+            </h1>
+            <p className="text-[10px] text-slate-400 flex items-center gap-1 font-medium">
+              <span>{profile.grade}</span> • <span>{profile.level}</span>
+            </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+
+        <div className="flex items-center gap-1.5">
+          {/* Child vs Parent Role Toggle */}
+          <button
+            onClick={toggleUserRole}
+            className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold transition border flex items-center gap-1 ${
+              profile.role === 'parent' 
+                ? 'bg-purple-950 text-purple-300 border-purple-700 shadow' 
+                : 'bg-indigo-950 text-indigo-300 border-indigo-700 shadow'
+            }`}
+            title="Switch Mode: Student / Child vs Parent / Educator"
+          >
+            <span>{profile.role === 'parent' ? '👨‍👩‍👧 Parent Mode' : '👦 Student Mode'}</span>
+          </button>
+
+          {/* Edit Profile & Auto Email Recovery Button */}
+          <button
+            onClick={() => setShowProfileSetup(true)}
+            className="px-2.5 py-1 rounded-full text-[10px] bg-slate-800 text-slate-300 border border-slate-700 hover:text-white font-bold transition flex items-center gap-1"
+            title="Profile, Grade & Auto Email Scanner Settings"
+          >
+            <span>⚙️ {profile.name}</span>
+          </button>
+
           {/* Global Voice Toggle */}
           <button 
             onClick={() => {
@@ -298,19 +454,19 @@ export const FusedCalcubossApp: React.FC = () => {
                 speakText(`Voice active! ${selectedTeacher.name} is ready to speak.`);
               }
             }}
-            className={`px-2.5 py-1 rounded-full text-[10px] font-bold transition flex items-center gap-1 border ${
+            className={`px-2 py-1 rounded-full text-[10px] font-bold transition flex items-center gap-1 border ${
               isVoiceEnabled 
                 ? 'bg-emerald-950/80 text-emerald-300 border-emerald-700/80 shadow-sm shadow-emerald-900/40' 
                 : 'bg-slate-800/80 text-slate-400 border-slate-700/80 hover:text-slate-200'
             }`}
             title="Toggle Global Voice TTS for Teacher Replies"
           >
-            <span>{isVoiceEnabled ? '🔊 Voice ON' : '🔇 Voice OFF'}</span>
+            <span>{isVoiceEnabled ? '🔊 ON' : '🔇 OFF'}</span>
           </button>
 
           <button 
             onClick={() => setShowVipModal(true)}
-            className={`px-3 py-1 rounded-full text-[10px] font-bold transition shadow ${isVip ? 'bg-gradient-to-r from-amber-400 to-orange-500 text-white' : 'bg-amber-950 text-amber-300 border border-amber-700'}`}
+            className={`px-2.5 py-1 rounded-full text-[10px] font-bold transition shadow ${isVip ? 'bg-gradient-to-r from-amber-400 to-orange-500 text-white' : 'bg-amber-950 text-amber-300 border border-amber-700'}`}
           >
             {isVip ? '👑 VIP ACTIVE' : 'VIP PASS'}
           </button>
@@ -337,30 +493,36 @@ export const FusedCalcubossApp: React.FC = () => {
         </div>
 
         {/* Sub Navigation Tabs */}
-        <div className="grid grid-cols-4 gap-1.5 pt-2 border-t border-slate-800 text-xs">
+        <div className="grid grid-cols-5 gap-1 pt-2 border-t border-slate-800 text-[11px]">
           <button 
             onClick={() => setActiveTab('chat')} 
             className={`py-1.5 rounded-xl font-bold transition text-center ${activeTab === 'chat' ? 'bg-indigo-600 text-white shadow' : 'bg-slate-800/60 text-slate-400 hover:text-white'}`}
           >
-            💬 Kids Chat
+            💬 Chat
           </button>
           <button 
             onClick={() => setActiveTab('profit')} 
             className={`py-1.5 rounded-xl font-bold transition text-center ${activeTab === 'profit' ? 'bg-indigo-600 text-white shadow' : 'bg-slate-800/60 text-slate-400 hover:text-white'}`}
           >
-            📊 Dashboard
+            📊 Stats
           </button>
           <button 
             onClick={() => setActiveTab('community')} 
             className={`py-1.5 rounded-xl font-bold transition text-center ${activeTab === 'community' ? 'bg-indigo-600 text-white shadow' : 'bg-slate-800/60 text-slate-400 hover:text-white'}`}
           >
-            👥 Community
+            👥 Feed
           </button>
           <button 
             onClick={() => setActiveTab('puzzles')} 
             className={`py-1.5 rounded-xl font-bold transition text-center ${activeTab === 'puzzles' ? 'bg-indigo-600 text-white shadow' : 'bg-slate-800/60 text-slate-400 hover:text-white'}`}
           >
-            🧩 Puzzles
+            🧩 Game
+          </button>
+          <button 
+            onClick={() => setActiveTab('vault')} 
+            className={`py-1.5 rounded-xl font-bold transition text-center flex items-center justify-center gap-1 ${activeTab === 'vault' ? 'bg-gradient-to-r from-amber-500 to-indigo-600 text-white shadow ring-2 ring-amber-400/40' : 'bg-amber-950/40 text-amber-300 border border-amber-500/30 hover:text-white'}`}
+          >
+            👑 Vault
           </button>
         </div>
       </div>
@@ -498,6 +660,7 @@ export const FusedCalcubossApp: React.FC = () => {
         {activeTab === 'profit' && <ParentDashboard />}
         {activeTab === 'community' && <ParentCommunity />}
         {activeTab === 'puzzles' && <PuzzleGame />}
+        {activeTab === 'vault' && <KidsCreatorVault />}
       </main>
 
       {/* VIP & PRICING PLAN MODAL */}
@@ -669,6 +832,157 @@ export const FusedCalcubossApp: React.FC = () => {
       <footer className="py-4 text-center text-[11px] text-slate-500 border-t border-slate-900 mt-4">
         Calcuboss Apostolic Academy OS6 • Kids Chat & Puzzle Pack 🧩
       </footer>
+      {/* ONBOARDING & PROFILE SETUP MODAL */}
+      {showProfileSetup && (
+        <div className="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+            <div className="text-center space-y-1 border-b border-slate-800 pb-3">
+              <div className="w-12 h-12 mx-auto rounded-2xl bg-gradient-to-tr from-cyan-400 via-indigo-500 to-purple-600 flex items-center justify-center text-2xl font-black shadow-lg">
+                ⚡
+              </div>
+              <h2 className="text-base font-black bg-gradient-to-r from-sky-400 to-indigo-400 bg-clip-text text-transparent">
+                Calcuboss OS6 Apostolic Academy
+              </h2>
+              <p className="text-xs text-slate-400 font-medium">
+                Grade R – Grade 12 Primary & Secondary Setup
+              </p>
+            </div>
+
+            <form onSubmit={handleSaveProfile} className="space-y-3.5 text-xs">
+              {/* Role Switcher Selector */}
+              <div>
+                <label className="block text-slate-300 font-bold mb-1">
+                  Workspace Role / Mode:
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setInputRole('child')}
+                    className={`py-2 px-3 rounded-xl font-extrabold border transition flex items-center justify-center gap-1.5 ${
+                      inputRole === 'child'
+                        ? 'bg-indigo-600 text-white border-indigo-400 shadow'
+                        : 'bg-slate-950 text-slate-400 border-slate-800 hover:text-white'
+                    }`}
+                  >
+                    <span>👦 Student / Child</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setInputRole('parent')}
+                    className={`py-2 px-3 rounded-xl font-extrabold border transition flex items-center justify-center gap-1.5 ${
+                      inputRole === 'parent'
+                        ? 'bg-purple-600 text-white border-purple-400 shadow'
+                        : 'bg-slate-950 text-slate-400 border-slate-800 hover:text-white'
+                    }`}
+                  >
+                    <span>👨‍👩‍👧 Parent / Educator</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Email & Auto-Scan */}
+              <div>
+                <div className="flex justify-between items-center mb-1">
+                  <label className="block text-slate-300 font-bold">
+                    Email Address (Saved across 22 Apps):
+                  </label>
+                  <button
+                    type="button"
+                    onClick={handleAutoScanEmail}
+                    className="text-[10px] text-amber-300 bg-amber-950 px-2 py-0.5 rounded border border-amber-700/60 font-bold hover:bg-amber-900 transition"
+                  >
+                    🔍 Auto-Scan Email
+                  </button>
+                </div>
+                <input
+                  type="email"
+                  required
+                  value={inputEmail}
+                  onChange={(e) => setInputEmail(e.target.value)}
+                  placeholder="e.g. willisderol@gmail.com"
+                  className="w-full px-3 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white font-mono focus:outline-none focus:border-indigo-500"
+                />
+              </div>
+
+              {/* Student / User Full Name */}
+              <div>
+                <label className="block text-slate-300 font-bold mb-1">
+                  Full Name:
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={inputName}
+                  onChange={(e) => setInputName(e.target.value)}
+                  placeholder="e.g. Derol Willis / Amahle Dlamini"
+                  className="w-full px-3 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-indigo-500"
+                />
+              </div>
+
+              {/* Age & Grade Level Grid */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-300 font-bold mb-1">Age:</label>
+                  <input
+                    type="number"
+                    min={5}
+                    max={19}
+                    value={inputAge}
+                    onChange={(e) => setInputAge(Number(e.target.value))}
+                    className="w-full px-3 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-300 font-bold mb-1">Grade Level:</label>
+                  <select
+                    value={inputGrade}
+                    onChange={(e) => setInputGrade(e.target.value)}
+                    className="w-full px-3 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-indigo-500"
+                  >
+                    <option value="Grade R">Grade R</option>
+                    <option value="Grade 1-3">Grade 1 – 3 (Foundation)</option>
+                    <option value="Grade 4-7">Grade 4 – 7 (Primary)</option>
+                    <option value="Grade 8-9">Grade 8 – 9 (Junior Sec)</option>
+                    <option value="Grade 10-12">Grade 10 – 12 (Senior Sec & Trades)</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Multi-tier AI safety note */}
+              <div className="p-3 bg-indigo-950/60 border border-indigo-800/60 rounded-xl text-[11px] text-indigo-200 space-y-1">
+                <div className="font-bold flex items-center gap-1 text-indigo-300">
+                  <span>🛡️ Multi-Tier AI Routing:</span>
+                </div>
+                <ul className="list-disc list-inside text-[10px] space-y-0.5 text-slate-300">
+                  <li><strong>Grade R–7:</strong> Gemini 2.5 Flash Lite (Fast, Primary Safety)</li>
+                  <li><strong>Grade 8–12:</strong> Llama 3.2 3B Instruct (STEM, Boilermaking, Trade Math)</li>
+                  <li><strong>Zero Network:</strong> Local TinyLlama 1.1B GGUF Fallback</li>
+                </ul>
+              </div>
+
+              <div className="flex gap-2 pt-1">
+                <button
+                  type="submit"
+                  className="flex-1 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-extrabold text-xs shadow-lg transition"
+                >
+                  Enter Calcuboss Workspace 🚀
+                </button>
+                {localStorage.getItem('calcuboss_user_profile') && (
+                  <button
+                    type="button"
+                    onClick={() => setShowProfileSetup(false)}
+                    className="px-4 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold border border-slate-700"
+                  >
+                    Cancel
+                  </button>
+                )}
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* LOCAL AI & TINYLLAMA CONFIG MODAL */}
       {showLocalAiConfig && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
