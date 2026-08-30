@@ -409,7 +409,12 @@ export const FusedCalcubossApp: React.FC = () => {
       {/* HEADER WITH AUTO EMAIL MEMORY & ROLE SWITCHER */}
       <header className="w-full max-w-2xl mx-auto flex flex-wrap items-center justify-between gap-2 py-2 border-b border-slate-900">
         <div className="flex items-center gap-2">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-cyan-500 to-indigo-600 flex items-center justify-center font-black text-lg">⚡</div>
+          <img 
+            src="/icon.png" 
+            alt="Calcuboss Logo" 
+            className="w-9 h-9 rounded-xl shadow-md border border-amber-500/40 object-cover" 
+            referrerPolicy="no-referrer" 
+          />
           <div>
             <h1 className="text-sm font-extrabold bg-gradient-to-r from-sky-400 to-pink-400 bg-clip-text text-transparent">
               Calcuboss OS6
@@ -837,9 +842,12 @@ export const FusedCalcubossApp: React.FC = () => {
         <div className="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4">
           <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
             <div className="text-center space-y-1 border-b border-slate-800 pb-3">
-              <div className="w-12 h-12 mx-auto rounded-2xl bg-gradient-to-tr from-cyan-400 via-indigo-500 to-purple-600 flex items-center justify-center text-2xl font-black shadow-lg">
-                ⚡
-              </div>
+              <img 
+                src="/icon.png" 
+                alt="Calcuboss App Icon" 
+                className="w-14 h-14 mx-auto rounded-2xl shadow-xl border border-amber-500/50 object-cover"
+                referrerPolicy="no-referrer"
+              />
               <h2 className="text-base font-black bg-gradient-to-r from-sky-400 to-indigo-400 bg-clip-text text-transparent">
                 Calcuboss OS6 Apostolic Academy
               </h2>

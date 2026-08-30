@@ -36,7 +36,7 @@ const DEROL_WILLIS_VIDEOS: YouTubeKidVideo[] = [
   {
     id: '1',
     youtube_id: '3JZ_D3ELwOQ',
-    title: 'Calcuboss OS6 — Kids Math & Fares Tour in Mamelodi 🚕🧮',
+    title: 'Calcuboss OS6 — Kids Math & Fares Tour in Pretoria 🚕🧮',
     description: 'Learn speed, distance, addition and subtraction with Calcuboss CEO!',
     teacher: '🤖 Calcuboss',
     category: 'Math & Logic'
@@ -164,7 +164,7 @@ export const ParentCommunity: React.FC = () => {
       }
     } else {
       const defaultLeaderboard: LeaderboardEntry[] = [
-        { id: '1', app_name: 'calcuboss', student_name: 'Amahle Dlamini (Mamelodi 🇿🇦)', xp: 1450, month: currentMonth, voucher_won: true, voucher_code: 'PNA-8492' },
+        { id: '1', app_name: 'calcuboss', student_name: 'Amahle Dlamini (Pretoria 🇿🇦)', xp: 1450, month: currentMonth, voucher_won: true, voucher_code: 'PNA-8492' },
         { id: '2', app_name: 'calcuboss', student_name: 'Priya Sharma (New Delhi 🇮🇳)', xp: 1320, month: currentMonth, voucher_won: true, voucher_code: 'AMZN-3019' },
         { id: '3', app_name: 'calcuboss', student_name: 'David Kiprop (Nairobi 🇰🇪)', xp: 1210, month: currentMonth, voucher_won: true, voucher_code: 'AMZN-7721' },
         { id: '4', app_name: 'calcuboss', student_name: 'Mateo Silva (São Paulo 🇧🇷)', xp: 1100, month: currentMonth, voucher_won: true, voucher_code: 'AMZN-5504' },
