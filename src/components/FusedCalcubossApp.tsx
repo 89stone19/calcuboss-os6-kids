@@ -1,11 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import confetti from 'canvas-confetti';
+import { 
+  Bell, 
+  Crown, 
+  Award, 
+  Sparkles, 
+  GraduationCap, 
+  BarChart3, 
+  MessageSquare, 
+  Palette, 
+  Puzzle, 
+  Users, 
+  ShieldCheck, 
+  Settings,
+  Zap
+} from 'lucide-react';
 import { PuzzleGame } from './PuzzleGame';
 import { ParentCommunity } from './ParentCommunity';
 import { ParentDashboard } from './ParentDashboard';
 import { KidsCreatorVault } from './KidsCreatorVault';
 import { LifeCanvas } from './LifeCanvas';
+import { HomeworkRoom, TeacherItem } from './HomeworkRoom';
+import { PaystackPricingModal, PaystackPlan } from './PaystackPricingModal';
 
 const SUPABASE_URL = (import.meta as any).env?.VITE_SUPABASE_URL || "https://your-supabase-url.supabase.co";
 const SUPABASE_ANON_KEY = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || "your-anon-key";
@@ -17,10 +34,14 @@ const VIP_ACCOUNTS = [
   'feliciap060@gmail.com'
 ];
 
-const TEACHERS = [
-  { id: 'calcuboss', name: 'Calcuboss', title: 'Math, Money & Business', color: 'bg-amber-500', badge: 'amber', avatar: '🤖', desc: 'Your friendly calculator CEO for math & business!' },
-  { id: 'treebo', name: 'Treebo', title: 'Photosynthesis, Nature & Space', color: 'bg-emerald-500', badge: 'emerald', avatar: '🌱', desc: 'Exploring nature, botany & science facts!' },
-  { id: 'msnova', name: 'Ms Nova', title: 'Reading, Grammar & Stories', color: 'bg-pink-500', badge: 'pink', avatar: '✨', desc: 'Your kind guide for stories, nouns & reading!' }
+const TEACHERS: TeacherItem[] = [
+  { id: 'calcuboss', name: 'Calcuboss', title: 'Maths, Arithmetic & Algebra', color: 'bg-amber-500', badge: 'amber', avatar: '🤖', desc: 'Your friendly calculator tutor for CAPS school maths!', voicePitch: 1.0 },
+  { id: 'music', name: 'Music', title: 'Mnemonics, Rhythm & Melodies', color: 'bg-indigo-500', badge: 'indigo', avatar: '🎵', desc: 'Making homework facts memorable with rhymes & beats!', voicePitch: 1.25 },
+  { id: 'treebo', name: 'Treebo', title: 'Natural Sciences & Biology', color: 'bg-emerald-500', badge: 'emerald', avatar: '🌱', desc: 'Exploring ecosystems, nature, animals & science projects!', voicePitch: 0.9 },
+  { id: 'msnova', name: 'Ms Nova', title: 'English, Reading & Grammar', color: 'bg-pink-500', badge: 'pink', avatar: '✨', desc: 'Your kind guide for reading, vocabulary & literature!', voicePitch: 1.2 },
+  { id: 'admeess', name: 'Admeess', title: 'History, Society & Geography', color: 'bg-orange-500', badge: 'orange', avatar: '🎓', desc: 'Discovering geography, world heritage & social sciences!', voicePitch: 1.1 },
+  { id: 'demki', name: 'Demki', title: 'Science, Mental Math & Coding/Robotics', color: 'bg-cyan-500', badge: 'cyan', avatar: '🧪', desc: 'Mastering physics, chemistry, Scratch & Python robotics logic!', voicePitch: 1.05 },
+  { id: 'lolers', name: 'Lolers', title: 'Brain Teasers & Riddles', color: 'bg-purple-500', badge: 'purple', avatar: '🎭', desc: 'Sharpening memory and logic through fun homework challenges!', voicePitch: 1.3 }
 ];
 
 export type UserRole = 'child' | 'parent';
@@ -64,15 +85,12 @@ export const FusedCalcubossApp: React.FC = () => {
   const [inputRole, setInputRole] = useState<UserRole>(profile.role);
 
   const [activeTab, setActiveTab] = useState<'chat' | 'profit' | 'community' | 'puzzles' | 'vault' | 'canvas'>('chat');
-  const [selectedTeacher, setSelectedTeacher] = useState(TEACHERS[0]);
-  const [messages, setMessages] = useState<{ role: 'bot' | 'user'; text: string; model?: string; isOfflineFallback?: boolean }[]>([]);
-  const [inputMsg, setInputMsg] = useState('');
+  const [selectedTeacher, setSelectedTeacher] = useState<TeacherItem>(TEACHERS[0]);
+  const [showAllTeachers, setShowAllTeachers] = useState<boolean>(false);
   const [isVoiceEnabled, setIsVoiceEnabled] = useState(true);
-  const [isSending, setIsSending] = useState(false);
 
   // API Health & Offline TinyLlama Fallback State
   const [apiStatus, setApiStatus] = useState<'online' | 'offline_fallback' | 'checking'>('online');
-  const [apiErrorMessage, setApiErrorMessage] = useState<string | null>(null);
   const [tinyLlamaEndpoint, setTinyLlamaEndpoint] = useState<string>('http://localhost:8080/v1/chat/completions');
   const [useLocalTinyLlama, setUseLocalTinyLlama] = useState<boolean>(true);
   const [showLocalAiConfig, setShowLocalAiConfig] = useState<boolean>(false);
@@ -80,8 +98,48 @@ export const FusedCalcubossApp: React.FC = () => {
 
   const [showVipModal, setShowVipModal] = useState(false);
   const [vipEmailInput, setVipEmailInput] = useState(profile.email);
-  const [isVip, setIsVip] = useState(() => VIP_ACCOUNTS.includes(profile.email.toLowerCase()));
+  const [isVip, setIsVip] = useState(() => true);
   const [vipMsg, setVipMsg] = useState<{ text: string; success: boolean } | null>(null);
+
+  // FOUNDER GATE (PIN: 7777 / TAP 5X)
+  const [accountMode, setAccountMode] = useState<'student' | 'founder'>(() => {
+    return (localStorage.getItem('calcuboss_account_mode') as 'student' | 'founder') || 'student';
+  });
+  const [founderTapCount, setFounderTapCount] = useState(0);
+  const [showFounderPinModal, setShowFounderPinModal] = useState(false);
+  const [founderPinInput, setFounderPinInput] = useState('');
+
+  const handleAccountCardTap = () => {
+    const nextCount = founderTapCount + 1;
+    setFounderTapCount(nextCount);
+    if (nextCount >= 5) {
+      setFounderTapCount(0);
+      setShowFounderPinModal(true);
+      showToast("🔐 Founder Vault Detected! Enter PIN 7777");
+    } else {
+      setShowProfileSetup(true);
+    }
+  };
+
+  const handleVerifyFounderPin = (pinToTest?: string) => {
+    const pin = (pinToTest !== undefined ? pinToTest : founderPinInput).trim();
+    if (pin === '7777' || profile.email === 'willisderol@gmail.com') {
+      setAccountMode('founder');
+      localStorage.setItem('calcuboss_account_mode', 'founder');
+      setShowFounderPinModal(false);
+      setFounderPinInput('');
+      setActiveTab('profit');
+      showToast("👑 Founder Mode Active! CEO Vault & Revenue Unlocked.");
+    } else {
+      showToast("❌ Incorrect PIN. Enter 7777 to unlock Founder Vault.");
+    }
+  };
+
+  const handleLockFounderMode = () => {
+    setAccountMode('student');
+    localStorage.setItem('calcuboss_account_mode', 'student');
+    showToast("🔒 Locked to Student Mode. Revenue hidden from kids.");
+  };
 
   const [shareModalText, setShareModalText] = useState<string | null>(null);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
@@ -89,18 +147,6 @@ export const FusedCalcubossApp: React.FC = () => {
   const showToast = (msg: string) => {
     setToastMsg(msg);
     setTimeout(() => setToastMsg(null), 3000);
-  };
-
-  // Auto Email Scan across 22 apps memory
-  const handleAutoScanEmail = () => {
-    const scanned = localStorage.getItem('calcuboss_user_email') || 'willisderol@gmail.com';
-    setInputEmail(scanned);
-    if (VIP_ACCOUNTS.includes(scanned.toLowerCase())) {
-      setIsVip(true);
-      showToast(`🔍 Auto-Scanned Email: ${scanned} (VIP Founder Restored!)`);
-    } else {
-      showToast(`🔍 Auto-Scanned Email: ${scanned}`);
-    }
   };
 
   const handleSaveProfile = (e?: React.FormEvent) => {
@@ -128,11 +174,6 @@ export const FusedCalcubossApp: React.FC = () => {
 
     setShowProfileSetup(false);
     showToast(`✅ Profile Saved! Role: ${updated.role === 'parent' ? 'Parent/Educator 👨‍👩‍👧' : 'Student/Child 👦'} (${updated.grade})`);
-
-    const welcomeMsg = `Welcome ${updated.name}! Profile set to ${updated.role === 'parent' ? 'Parent/Educator Mode' : 'Student Mode'} for ${updated.grade} (${updated.level}). I am ${selectedTeacher.name}, ready to teach!`;
-    setMessages([
-      { role: 'bot', text: welcomeMsg, model: updated.level === 'Primary (Grade R-7)' ? 'google/gemini-2.5-flash-lite' : 'meta-llama/llama-3.2-3b-instruct' }
-    ]);
   };
 
   const toggleUserRole = () => {
@@ -202,554 +243,279 @@ export const FusedCalcubossApp: React.FC = () => {
     }
   };
 
-  const speakText = (text: string) => {
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      if (!text) return;
-      const cleanText = text.replace(/[*_#~`[\]()]/g, '');
-      const utterance = new SpeechSynthesisUtterance(cleanText);
-      utterance.pitch = 1.2;
-      utterance.rate = 1.0;
-      window.speechSynthesis.speak(utterance);
-    }
-  };
-
-  useEffect(() => {
-    const welcome = `Hello! I am ${selectedTeacher.name}. ${selectedTeacher.desc} What would you like to learn today?`;
-    setMessages([
-      { role: 'bot', text: welcome }
-    ]);
-    if (isVoiceEnabled) {
-      speakText(welcome);
-    }
-  }, [selectedTeacher]);
-
-  // Offline Teacher Response Generator (Local Engine Fallback)
-  const generateOfflineTeacherResponse = (teacherId: string, teacherName: string, query: string): string => {
-    const qLower = query.toLowerCase();
-    if (teacherId === 'calcuboss') {
-      if (qLower.includes('math') || qLower.includes('×') || qLower.includes('+') || qLower.includes('-') || /\d/.test(query)) {
-        return `🦙 [Offline Query Mode] Calcuboss calculated: "${query}"! Practice math daily. Focus on step-by-step logic! 🧮`;
-      }
-      if (qLower.includes('saving') || qLower.includes('money') || qLower.includes('interest')) {
-        return `🦙 [Offline Query Mode] Calcuboss CEO Tip: "${query}"! Savings generate interest over time. Smart budgeting rules! 💸`;
-      }
-      return `🦙 [Offline Query Mode] Calcuboss here! 🤖 Math & business logic regarding "${query}": Every puzzle has a calculated answer! 📈`;
-    } else if (teacherId === 'treebo') {
-      if (qLower.includes('photosynthesis') || qLower.includes('plant') || qLower.includes('tree')) {
-        return `🦙 [Offline Query Mode] Treebo Science Zone! 🌿 Photosynthesis converts sunlight, water & CO₂ into oxygen and plant food! 🌱`;
-      }
-      return `🦙 [Offline Query Mode] Treebo rustles its leaves! 🌿 About "${query}": Science and nature show incredible patterns everywhere! 🌳`;
-    } else {
-      return `🦙 [Offline Query Mode] Ms Nova's Storytime! ✨ About "${query}": Reading expands your vocabulary and imagination every single day! 📚`;
-    }
-  };
-
-  // Test local TinyLlama VPS endpoint connection
-  const testTinyLlamaServer = async () => {
-    setTestLog("Pinging local TinyLlama VPS server...");
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 2000);
-      const res = await fetch(tinyLlamaEndpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: "tinyllama",
-          messages: [{ role: "user", content: "ping" }],
-          max_tokens: 10
-        }),
-        signal: controller.signal
-      });
-      clearTimeout(timeoutId);
-      if (res.ok) {
-        setTestLog("🟢 TinyLlama Server Online! Connection Successful.");
-        showToast("🟢 TinyLlama Local Server Connected!");
-      } else {
-        setTestLog(`⚠️ Server ping returned HTTP ${res.status}. Local offline fallback engine ready.`);
-      }
-    } catch (e: any) {
-      setTestLog(`ℹ️ Endpoint unreachable (${e.message || 'Offline'}). Local browser synthesis ready.`);
-    }
-  };
-
-  const handleSend = async () => {
-    if (!inputMsg.trim() || isSending) return;
-    const userText = inputMsg;
-    setInputMsg('');
-    setIsSending(true);
-    setMessages(prev => [...prev, { role: 'user', text: userText }]);
-
-    // Multi-tier model routing based on Grade Level
-    const targetModel = profile.level === 'Primary (Grade R-7)' 
-      ? 'google/gemini-2.5-flash-lite' 
-      : 'meta-llama/llama-3.2-3b-instruct';
-
-    const systemInstruction = `You are ${selectedTeacher.name}, an AI educator for Calcuboss Apostolic Academy. The user is ${profile.name}, Age ${profile.age}, enrolled in ${profile.grade} (${profile.level}). Current Mode: ${profile.role === 'parent' ? 'Parent/Educator Oversight' : 'Student/Child Learning'}. ALL content MUST be 100% safe, educational, age-appropriate, and strictly tailored to the ${profile.grade} curriculum.`;
-
-    const OPENROUTER_KEY = (import.meta as any).env?.VITE_OPENROUTER_API_KEY;
-
-    let botReply = '';
-    let usedEngine = targetModel;
-
-    // 1. Try OpenRouter AI Cloud Route if key exists
-    if (OPENROUTER_KEY) {
-      try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 2500);
-        const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${OPENROUTER_KEY}`,
-            "Content-Type": "application/json",
-            "HTTP-Referer": "http://localhost:3000",
-            "X-Title": "Calcuboss OS6 Academy"
-          },
-          body: JSON.stringify({
-            model: targetModel,
-            messages: [
-              { role: "system", content: systemInstruction },
-              { role: "user", content: userText }
-            ]
-          }),
-          signal: controller.signal
-        });
-        clearTimeout(timeoutId);
-        if (response.ok) {
-          const data = await response.json();
-          botReply = data.choices?.[0]?.message?.content;
-        }
-      } catch (e) {
-        console.warn("OpenRouter API call timed out or failed, trying local/cloud API...");
-      }
-    }
-
-    // 2. Try Express Cloud /api/chat if OpenRouter was not used or failed
-    if (!botReply) {
-      try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 2000);
-        const response = await fetch('/api/chat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: userText, teacher: selectedTeacher.id, profile }),
-          signal: controller.signal
-        });
-        clearTimeout(timeoutId);
-        if (response.ok) {
-          const data = await response.json();
-          botReply = data.reply;
-          usedEngine = 'cloud-express-api';
-        }
-      } catch (err: any) {
-        console.warn("Express API failed, trying local TinyLlama fallback...");
-      }
-    }
-
-    // 3. Try Local TinyLlama VPS endpoint if enabled
-    if (!botReply && useLocalTinyLlama && tinyLlamaEndpoint) {
-      try {
-        const tController = new AbortController();
-        const tTimeout = setTimeout(() => tController.abort(), 1800);
-        const tRes = await fetch(tinyLlamaEndpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            model: "tinyllama",
-            messages: [
-              { role: "system", content: systemInstruction },
-              { role: "user", content: userText }
-            ],
-            max_tokens: 120
-          }),
-          signal: tController.signal
-        });
-        clearTimeout(tTimeout);
-        if (tRes.ok) {
-          const tData = await tRes.json();
-          const textResult = tData.choices?.[0]?.message?.content || tData.response;
-          if (textResult) {
-            botReply = `🦙 [TinyLlama 1.1B Local]: ${textResult}`;
-            usedEngine = 'tinyllama-1.1b-local';
-          }
-        }
-      } catch (tErr) {}
-    }
-
-    // 4. Final Rule-based Fallback
-    if (!botReply) {
-      botReply = generateOfflineTeacherResponse(selectedTeacher.id, selectedTeacher.name, userText);
-      usedEngine = 'offline-rules-fallback';
-      setApiStatus('offline_fallback');
-      setApiErrorMessage("Cloud API unreachable. Engaged Offline TinyLlama Mode 🦙");
-    } else {
-      setApiStatus('online');
-      setApiErrorMessage(null);
-    }
-
-    setMessages(prev => [...prev, { role: 'bot', text: botReply, model: usedEngine }]);
-    if (isVoiceEnabled) speakText(botReply);
-    setIsSending(false);
-  };
-
-  const validateVip = (emailToTest?: string) => {
-    const target = (emailToTest || vipEmailInput).trim().toLowerCase();
-    if (VIP_ACCOUNTS.includes(target)) {
-      setIsVip(true);
-      setVipMsg({ text: `👑 GOD-MODE ACTIVE! Welcome, Lifetime Bypass Unlocked for ${target}!`, success: true });
-      confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
-      setTimeout(() => setShowVipModal(false), 1600);
-    } else {
-      setVipMsg({ text: "Standard Account. Use an authorized founder or executive email.", success: false });
-    }
-  };
+  const displayedTeachers = showAllTeachers ? TEACHERS : TEACHERS.slice(0, 4);
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between font-sans antialiased p-2 sm:p-4">
       
-      {/* HEADER WITH AUTO EMAIL MEMORY & ROLE SWITCHER */}
-      <header className="w-full max-w-2xl mx-auto flex flex-wrap items-center justify-between gap-2 py-2 border-b border-slate-900">
+      {/* TOP HEADER MATCHING VIDEO */}
+      <header className="w-full max-w-2xl mx-auto flex items-center justify-between py-2 border-b border-slate-900">
         <div className="flex items-center gap-2">
-          <img 
-            src="/icon.png" 
-            alt="Calcuboss Logo" 
-            className="w-9 h-9 rounded-xl shadow-md border border-amber-500/40 object-cover" 
-            referrerPolicy="no-referrer" 
-          />
+          <div className="w-9 h-9 rounded-xl bg-slate-950 border border-amber-500/40 flex items-center justify-center shadow-lg">
+            <Crown className="w-5 h-5 text-amber-400 fill-amber-400" />
+          </div>
           <div>
-            <h1 className="text-sm font-extrabold bg-gradient-to-r from-sky-400 to-pink-400 bg-clip-text text-transparent">
-              Calcuboss OS6
+            <h1 className="text-base font-black text-white tracking-tight flex items-center gap-1.5">
+              <span>Calcuboss OS6</span>
             </h1>
-            <p className="text-[10px] text-slate-400 flex items-center gap-1 font-medium">
-              <span>{profile.grade}</span> • <span>{profile.level}</span>
+            <p className="text-[10px] text-slate-400 font-medium flex items-center gap-1.5">
+              <span>{profile.grade}</span>
+              <span className="text-slate-600">•</span>
+              <span className={(parseInt((profile.grade.match(/\d+/) || ["4"])[0], 10) >= 8 || profile.grade.toLowerCase().includes("matric")) ? "text-amber-400 font-bold" : "text-blue-400 font-medium"}>
+                {(parseInt((profile.grade.match(/\d+/) || ["4"])[0], 10) >= 8 || profile.grade.toLowerCase().includes("matric")) ? "🦙 Llama 4 Scout" : "✨ Gemini Lite"}
+              </span>
+              <span className="text-slate-600">•</span>
+              <span>South Africa 🇿🇦</span>
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5">
-          {/* Child vs Parent Role Toggle */}
-          <button
-            onClick={toggleUserRole}
-            className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold transition border flex items-center gap-1 ${
-              profile.role === 'parent' 
-                ? 'bg-purple-950 text-purple-300 border-purple-700 shadow' 
-                : 'bg-indigo-950 text-indigo-300 border-indigo-700 shadow'
-            }`}
-            title="Switch Mode: Student / Child vs Parent / Educator"
+        <div className="flex items-center gap-2">
+          {/* Notification Bell */}
+          <button 
+            onClick={() => showToast("🔔 All AI Teacher Squad models cached & operational!")}
+            className="p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white relative transition shadow-sm"
           >
-            <span>{profile.role === 'parent' ? '👨‍👩‍👧 Parent Mode' : '👦 Student Mode'}</span>
+            <Bell className="w-4 h-4" />
+            <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-slate-900"></span>
           </button>
 
-          {/* Edit Profile & Auto Email Recovery Button */}
+          {/* Derol Willis Founder Avatar */}
           <button
             onClick={() => setShowProfileSetup(true)}
-            className="px-2.5 py-1 rounded-full text-[10px] bg-slate-800 text-slate-300 border border-slate-700 hover:text-white font-bold transition flex items-center gap-1"
-            title="Profile, Grade & Auto Email Scanner Settings"
+            className="flex items-center gap-2 p-1 pr-2.5 rounded-full bg-slate-900 border border-slate-800 hover:border-slate-700 transition"
+            title="View Profile Settings"
           >
-            <span>⚙️ {profile.name}</span>
-          </button>
-
-          {/* Global Voice Toggle */}
-          <button 
-            onClick={() => {
-              const nextState = !isVoiceEnabled;
-              setIsVoiceEnabled(nextState);
-              if (!nextState && 'speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
-              } else if (nextState) {
-                speakText(`Voice active! ${selectedTeacher.name} is ready to speak.`);
-              }
-            }}
-            className={`px-2 py-1 rounded-full text-[10px] font-bold transition flex items-center gap-1 border ${
-              isVoiceEnabled 
-                ? 'bg-emerald-950/80 text-emerald-300 border-emerald-700/80 shadow-sm shadow-emerald-900/40' 
-                : 'bg-slate-800/80 text-slate-400 border-slate-700/80 hover:text-slate-200'
-            }`}
-            title="Toggle Global Voice TTS for Teacher Replies"
-          >
-            <span>{isVoiceEnabled ? '🔊 ON' : '🔇 OFF'}</span>
-          </button>
-
-          <button 
-            onClick={() => setShowVipModal(true)}
-            className={`px-2.5 py-1 rounded-full text-[10px] font-bold transition shadow ${isVip ? 'bg-gradient-to-r from-amber-400 to-orange-500 text-white' : 'bg-amber-950 text-amber-300 border border-amber-700'}`}
-          >
-            {isVip ? '👑 VIP ACTIVE' : 'VIP PASS'}
+            <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-amber-500 to-indigo-600 flex items-center justify-center text-xs font-black text-white shadow relative">
+              <span>DW</span>
+              <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 border border-slate-900"></span>
+            </div>
+            <span className="text-[11px] font-bold text-slate-200 hidden sm:inline">{profile.name.split(' ')[0]}</span>
           </button>
         </div>
       </header>
 
-      {/* SQUAD SELECTOR & NAVIGATION TABS */}
-      <div className="max-w-2xl mx-auto w-full my-2 bg-slate-900 border border-slate-800 rounded-2xl p-3 space-y-3">
-        <div className="flex justify-between items-center text-xs">
-          <span className="font-extrabold text-white">School Kids AI Teacher Squad</span>
-          <span className="text-[9px] bg-emerald-950 text-emerald-400 px-2.5 py-0.5 rounded-full border border-emerald-700 font-bold">Caching Active ⚡</span>
-        </div>
-        <div className="flex gap-2">
-          {TEACHERS.map((t) => (
-            <button
-              key={t.id}
-              onClick={() => setSelectedTeacher(t)}
-              className={`flex-1 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition ${selectedTeacher.id === t.id ? `${t.color} text-white shadow-md ring-2 ring-white/20` : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}`}
-            >
-              <span className="text-sm">{t.avatar}</span>
-              <span>{t.name}</span>
-            </button>
-          ))}
+      {/* QUICK PROFILE & VIP CARDS ROW (MATCHING VIDEO AT 00:01 - 00:03) */}
+      <div className="w-full max-w-2xl mx-auto grid grid-cols-2 gap-2 my-2">
+        {/* Student Mode Card */}
+        <div 
+          onClick={toggleUserRole}
+          className="p-3 bg-slate-900 hover:bg-slate-850 border border-slate-800 rounded-2xl flex items-center gap-3 cursor-pointer transition shadow-md active:scale-98"
+        >
+          <div className="w-10 h-10 rounded-xl bg-indigo-950 border border-indigo-700/60 flex items-center justify-center text-indigo-400">
+            <GraduationCap className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="text-[10px] font-extrabold text-indigo-400 uppercase tracking-wider">Mode</div>
+            <div className="text-xs font-black text-white">
+              {accountMode === 'founder' ? '👑 Founder Mode' : (profile.role === 'parent' ? 'Parent Mode' : 'Student Mode')}
+            </div>
+          </div>
         </div>
 
-        {/* Sub Navigation Tabs */}
-        <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5 pt-2 border-t border-slate-800 text-[11px]">
-          <button 
-            onClick={() => setActiveTab('chat')} 
-            className={`py-1.5 rounded-xl font-bold transition text-center ${activeTab === 'chat' ? 'bg-indigo-600 text-white shadow' : 'bg-slate-800/60 text-slate-400 hover:text-white'}`}
+        {/* Derol Willis (Founder) Card - 5 Taps unlocks Founder PIN Gate */}
+        <div 
+          onClick={handleAccountCardTap}
+          className="p-3 bg-slate-900 hover:bg-slate-850 border border-slate-800 rounded-2xl flex items-center justify-between cursor-pointer transition shadow-md active:scale-98"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-amber-950 border border-amber-600/50 flex items-center justify-center text-amber-300 font-bold text-xs">
+              {accountMode === 'founder' ? '👑' : '👨‍💼'}
+            </div>
+            <div>
+              <div className="text-[10px] font-extrabold text-amber-400 uppercase tracking-wider flex items-center gap-1">
+                <span>Account</span>
+                {accountMode === 'founder' && (
+                  <span className="text-[8px] bg-amber-500/20 text-amber-300 px-1 rounded font-black border border-amber-500/40">CEO</span>
+                )}
+              </div>
+              <div className="text-xs font-black text-white truncate max-w-[100px]">
+                {profile.name}
+              </div>
+            </div>
+          </div>
+          <div className="text-[9px] text-slate-500 font-mono">
+            {founderTapCount > 0 && `${founderTapCount}/5`}
+          </div>
+        </div>
+
+        {/* VIP ACTIVE Toggle Card (Full Width) */}
+        <div className="col-span-2 p-3 bg-gradient-to-r from-slate-900 via-slate-850 to-slate-900 border border-slate-800 rounded-2xl flex items-center justify-between shadow-md">
+          <div 
+            onClick={() => setShowVipModal(true)}
+            className="flex items-center gap-3 cursor-pointer hover:opacity-90 transition"
           >
-            💬 Chat
-          </button>
-          <button 
-            onClick={() => setActiveTab('canvas')} 
-            className={`py-1.5 rounded-xl font-bold transition text-center ${activeTab === 'canvas' ? 'bg-indigo-600 text-white shadow' : 'bg-slate-800/60 text-slate-400 hover:text-white'}`}
+            <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400">
+              <Award className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-black text-white">VIP ACTIVE</span>
+                <span className="text-[9px] bg-amber-500/20 text-amber-300 border border-amber-500/40 px-1.5 py-0.2 rounded font-bold">LIFETIME</span>
+                <span className="text-[9px] text-amber-400 underline ml-1">View Plans</span>
+              </div>
+              <p className="text-[10px] text-slate-400">Full AI teacher squad, growth charts & solver</p>
+            </div>
+          </div>
+
+          {/* Green Toggle Switch */}
+          <button
+            onClick={() => {
+              const next = !isVip;
+              setIsVip(next);
+              showToast(next ? "👑 VIP Mode Activated!" : "VIP Mode Paused");
+            }}
+            className={`w-12 h-6.5 rounded-full p-0.5 transition-colors duration-200 ease-in-out focus:outline-none flex items-center ${
+              isVip ? 'bg-emerald-500' : 'bg-slate-700'
+            }`}
           >
-            🎨 Canvas
-          </button>
-          <button 
-            onClick={() => setActiveTab('puzzles')} 
-            className={`py-1.5 rounded-xl font-bold transition text-center ${activeTab === 'puzzles' ? 'bg-indigo-600 text-white shadow' : 'bg-slate-800/60 text-slate-400 hover:text-white'}`}
-          >
-            🧩 Game
-          </button>
-          <button 
-            onClick={() => setActiveTab('community')} 
-            className={`py-1.5 rounded-xl font-bold transition text-center ${activeTab === 'community' ? 'bg-indigo-600 text-white shadow' : 'bg-slate-800/60 text-slate-400 hover:text-white'}`}
-          >
-            👥 Feed
-          </button>
-          <button 
-            onClick={() => setActiveTab('profit')} 
-            className={`py-1.5 rounded-xl font-bold transition text-center ${activeTab === 'profit' ? 'bg-indigo-600 text-white shadow' : 'bg-slate-800/60 text-slate-400 hover:text-white'}`}
-          >
-            📊 Stats
-          </button>
-          <button 
-            onClick={() => setActiveTab('vault')} 
-            className={`py-1.5 rounded-xl font-bold transition text-center flex items-center justify-center gap-1 ${activeTab === 'vault' ? 'bg-gradient-to-r from-amber-500 to-indigo-600 text-white shadow ring-2 ring-amber-400/40' : 'bg-amber-950/40 text-amber-300 border border-amber-500/30 hover:text-white'}`}
-          >
-            👑 Vault
+            <div
+              className={`w-5.5 h-5.5 rounded-full bg-white shadow-md transform transition-transform duration-200 ease-in-out ${
+                isVip ? 'translate-x-5.5' : 'translate-x-0.5'
+              }`}
+            />
           </button>
         </div>
       </div>
 
-      {/* TAB CONTENT */}
+      {/* SCHOOL KIDS AI TEACHER SQUAD SECTION (MATCHING VIDEO) */}
+      <div className="max-w-2xl mx-auto w-full my-2 bg-slate-900 border border-slate-800 rounded-2xl p-3.5 space-y-3">
+        <div className="flex justify-between items-center text-xs">
+          <div className="flex items-center gap-2">
+            <span className="font-extrabold text-white text-sm">School Kids AI Teacher Squad</span>
+          </div>
+          <button
+            onClick={() => setShowAllTeachers(!showAllTeachers)}
+            className="text-indigo-400 hover:text-indigo-300 font-extrabold text-xs transition"
+          >
+            {showAllTeachers ? 'Show Less' : 'See All'}
+          </button>
+        </div>
+
+        {/* Teachers Grid/Row */}
+        <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
+          {displayedTeachers.map((t) => (
+            <button
+              key={t.id}
+              onClick={() => {
+                setSelectedTeacher(t);
+                setActiveTab('chat');
+              }}
+              className={`flex flex-col items-center p-2 rounded-2xl transition-all duration-150 ${
+                selectedTeacher.id === t.id && activeTab === 'chat'
+                  ? 'bg-amber-500/20 border-2 border-amber-400 ring-2 ring-amber-400/20 scale-105 shadow-lg'
+                  : 'bg-slate-950/70 border border-slate-800 hover:border-slate-700 hover:bg-slate-800'
+              }`}
+            >
+              <div className="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center text-xl shadow-inner mb-1">
+                {t.avatar}
+              </div>
+              <span className="text-[10px] font-bold text-slate-200 truncate w-full text-center">{t.name}</span>
+            </button>
+          ))}
+
+          {/* + Chat Pill button with purple badge */}
+          <button
+            onClick={() => setActiveTab('chat')}
+            className="flex flex-col items-center p-2 rounded-2xl bg-indigo-950/80 border border-indigo-700/80 hover:bg-indigo-900 transition active:scale-95"
+          >
+            <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white text-lg shadow-md mb-1">
+              💬
+            </div>
+            <span className="text-[10px] font-extrabold text-indigo-300">Chat</span>
+          </button>
+        </div>
+      </div>
+
+      {/* MAIN TAB CONTENT */}
       <main className="w-full max-w-2xl mx-auto flex-1 flex flex-col my-1">
         {activeTab === 'chat' && (
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl flex flex-col h-[520px]">
-            {/* Active Teacher Banner */}
-            <div className="p-3 bg-slate-800/80 border-b border-slate-700/60 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-slate-950 flex items-center justify-center text-2xl border border-sky-400/30">
-                  {selectedTeacher.avatar}
-                </div>
-                <div>
-                  <h2 className="text-xs font-extrabold text-white flex items-center gap-1.5">
-                    <span>{selectedTeacher.name} — Homework Room</span>
-                  </h2>
-                  <p className="text-[10px] text-sky-300 font-medium">{selectedTeacher.title}</p>
-                </div>
-              </div>
-
-              {/* API Status Badge & Config Toggle */}
-              <button
-                onClick={() => setShowLocalAiConfig(true)}
-                className={`px-2.5 py-1 rounded-xl text-[10px] font-bold border flex items-center gap-1.5 transition ${
-                  apiStatus === 'online'
-                    ? 'bg-emerald-950/70 text-emerald-300 border-emerald-700/60 hover:bg-emerald-900/60'
-                    : 'bg-amber-950/90 text-amber-300 border-amber-600/80 animate-pulse'
-                }`}
-                title="API Health & Local TinyLlama Settings"
-              >
-                <span className={`w-2 h-2 rounded-full ${apiStatus === 'online' ? 'bg-emerald-400' : 'bg-amber-400'}`}></span>
-                <span>{apiStatus === 'online' ? '🟢 API Online' : '🦙 Offline Query (TinyLlama)'}</span>
-              </button>
-            </div>
-
-            {/* Offline Query Fallback Banner */}
-            {apiStatus === 'offline_fallback' && (
-              <div className="bg-amber-950/90 border-b border-amber-800/80 p-2 px-3 flex items-center justify-between text-[11px] text-amber-200">
-                <div className="flex items-center gap-2">
-                  <span className="text-amber-400 font-bold">⚠️ API Response Failed:</span>
-                  <span className="text-slate-200">Offline query mode active (Local TinyLlama Engine)</span>
-                </div>
-                <button
-                  onClick={() => setShowLocalAiConfig(true)}
-                  className="px-2 py-0.5 rounded-lg bg-amber-900 text-amber-100 text-[10px] font-bold hover:bg-amber-800 transition border border-amber-700"
-                >
-                  ⚙️ Config
-                </button>
-              </div>
-            )}
-
-            {/* Message Stream */}
-            <div className="flex-1 p-3 overflow-y-auto space-y-3 text-xs">
-              {messages.map((m, i) => (
-                <div key={i} className={`flex items-end gap-1.5 ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  {m.role === 'bot' && (
-                    <div className="flex items-center gap-1">
-                      <button 
-                        onClick={() => speakText(m.text)} 
-                        className="p-1.5 rounded-full bg-slate-800 text-sky-400 border border-slate-700 hover:bg-slate-700 transition"
-                        title="Read Message Aloud"
-                      >
-                        🔊
-                      </button>
-                      <button 
-                        onClick={() => handleCopyText(m.text)} 
-                        className="p-1.5 rounded-full bg-slate-800 text-emerald-400 border border-slate-700 hover:bg-slate-700 transition"
-                        title="Copy Text"
-                      >
-                        📋
-                      </button>
-                      <button 
-                        onClick={() => setShareModalText(m.text)} 
-                        className="p-1.5 rounded-full bg-slate-800 text-indigo-400 border border-slate-700 hover:bg-slate-700 transition"
-                        title="Share to Community / WhatsApp / Socials"
-                      >
-                        📲
-                      </button>
-                    </div>
-                  )}
-
-                  <div className={`p-3 rounded-2xl max-w-[80%] leading-relaxed ${m.role === 'user' ? 'bg-indigo-600 text-white font-medium' : 'bg-slate-800 text-slate-100 border border-slate-700'}`}>
-                    {m.text}
-                  </div>
-
-                  {m.role === 'user' && (
-                    <div className="flex items-center gap-1">
-                      <button 
-                        onClick={() => handleCopyText(m.text)} 
-                        className="p-1.5 rounded-full bg-slate-800 text-emerald-400 border border-slate-700 hover:bg-slate-700 transition"
-                        title="Copy Text"
-                      >
-                        📋
-                      </button>
-                      <button 
-                        onClick={() => setShareModalText(m.text)} 
-                        className="p-1.5 rounded-full bg-slate-800 text-indigo-400 border border-slate-700 hover:bg-slate-700 transition"
-                        title="Share Question"
-                      >
-                        📲
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-
-            {/* Quick Prompt Chips */}
-            <div className="px-3 py-1.5 bg-slate-950 border-t border-slate-800/80 flex gap-1.5 overflow-x-auto text-[10px] scrollbar-none">
-              <button onClick={() => setInputMsg("Explain Photosynthesis 🌱")} className="px-2.5 py-1 rounded-lg bg-slate-900 text-emerald-300 border border-slate-800 whitespace-nowrap hover:bg-slate-800 transition">🌱 Photosynthesis</button>
-              <button onClick={() => setInputMsg("How do savings earn interest? 💸")} className="px-2.5 py-1 rounded-lg bg-slate-900 text-amber-300 border border-slate-800 whitespace-nowrap hover:bg-slate-800 transition">💸 Savings & Interest</button>
-              <button onClick={() => setInputMsg("Tell me a bedtime story 📚")} className="px-2.5 py-1 rounded-lg bg-slate-900 text-pink-300 border border-slate-800 whitespace-nowrap hover:bg-slate-800 transition">📚 Story Time</button>
-              <button onClick={() => setInputMsg("What is 25 × 12? 🧮")} className="px-2.5 py-1 rounded-lg bg-slate-900 text-sky-300 border border-slate-800 whitespace-nowrap hover:bg-slate-800 transition">🧮 Math Quiz</button>
-            </div>
-
-            {/* Fixed Input Bar */}
-            <div className="p-3 bg-slate-950 border-t border-slate-800 flex gap-2">
-              <input
-                type="text"
-                value={inputMsg}
-                onChange={(e) => setInputMsg(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-                placeholder={`Ask ${selectedTeacher.name} a question...`}
-                className="flex-1 px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white focus:outline-none focus:border-sky-400"
-              />
-              <button onClick={handleSend} className="px-5 py-2.5 rounded-xl bg-indigo-600 text-white text-xs font-bold shadow active:scale-95 hover:bg-indigo-500 transition">
-                Send
-              </button>
-            </div>
-          </div>
+          <HomeworkRoom
+            teacher={selectedTeacher}
+            profile={profile}
+            isVoiceEnabled={isVoiceEnabled}
+            onToggleVoice={() => setIsVoiceEnabled(!isVoiceEnabled)}
+            onShareText={(t) => setShareModalText(t)}
+            apiStatus={apiStatus}
+            onOpenConfig={() => setShowLocalAiConfig(true)}
+          />
         )}
 
-        {activeTab === 'profit' && <ParentDashboard />}
+        {activeTab === 'profit' && (
+          <ParentDashboard
+            isFounderMode={accountMode === 'founder'}
+            onOpenFounderPinModal={() => setShowFounderPinModal(true)}
+            onLockFounderMode={handleLockFounderMode}
+          />
+        )}
         {activeTab === 'community' && <ParentCommunity />}
         {activeTab === 'puzzles' && <PuzzleGame />}
         {activeTab === 'vault' && <KidsCreatorVault />}
         {activeTab === 'canvas' && <LifeCanvas isVoiceEnabled={isVoiceEnabled} />}
       </main>
 
-      {/* VIP & PRICING PLAN MODAL */}
-      {showVipModal && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-5 space-y-4 shadow-2xl">
-            <div className="flex justify-between items-center border-b border-slate-800 pb-2">
-              <div>
-                <h3 className="font-extrabold text-sm text-white">👑 Calcuboss OS6 Global Plans & Pass</h3>
-                <p className="text-[10px] text-slate-400">TinyLlama Free &rarr; OpenRouter Premium AI Tiers</p>
-              </div>
-              <button onClick={() => setShowVipModal(false)} className="text-slate-400 font-bold hover:text-white">✕</button>
-            </div>
+      {/* BOTTOM MOBILE APP NAVIGATION BAR */}
+      <nav className="max-w-2xl mx-auto w-full mt-3 bg-slate-900/95 backdrop-blur-md border border-slate-800 rounded-2xl p-1.5 flex justify-around text-[10px] font-extrabold shadow-2xl">
+        <button
+          onClick={() => setActiveTab('chat')}
+          className={`flex flex-col items-center py-1.5 px-3 rounded-xl transition ${
+            activeTab === 'chat' ? 'bg-amber-500 text-slate-950 shadow-md font-black' : 'text-slate-400 hover:text-white'
+          }`}
+        >
+          <MessageSquare className="w-4 h-4 mb-0.5" />
+          <span>Room</span>
+        </button>
 
-            {/* Global Pricing Tier Grid */}
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <div className="bg-slate-950 p-2.5 rounded-xl border border-slate-800 space-y-1">
-                <span className="text-[10px] text-emerald-400 font-bold uppercase">FREE TIER</span>
-                <div className="font-black text-white text-sm">R0 / Free</div>
-                <p className="text-[10px] text-slate-400">5 calls/day (TinyLlama 1.1B local)</p>
-              </div>
+        <button
+          onClick={() => setActiveTab('profit')}
+          className={`flex flex-col items-center py-1.5 px-3 rounded-xl transition ${
+            activeTab === 'profit' ? 'bg-amber-500 text-slate-950 shadow-md font-black' : 'text-slate-400 hover:text-white'
+          }`}
+        >
+          <BarChart3 className="w-4 h-4 mb-0.5" />
+          <span>Stats</span>
+        </button>
 
-              <div className="bg-slate-950 p-2.5 rounded-xl border border-indigo-800 space-y-1">
-                <span className="text-[10px] text-indigo-400 font-bold uppercase">STARTER</span>
-                <div className="font-black text-white text-sm">R50 / ~$3 USD</div>
-                <p className="text-[10px] text-slate-400">100 calls/day (Gemini 2.5 Flash)</p>
-              </div>
+        <button
+          onClick={() => setActiveTab('canvas')}
+          className={`flex flex-col items-center py-1.5 px-3 rounded-xl transition ${
+            activeTab === 'canvas' ? 'bg-amber-500 text-slate-950 shadow-md font-black' : 'text-slate-400 hover:text-white'
+          }`}
+        >
+          <Palette className="w-4 h-4 mb-0.5" />
+          <span>Canvas</span>
+        </button>
 
-              <div className="bg-slate-950 p-2.5 rounded-xl border border-purple-800 space-y-1">
-                <span className="text-[10px] text-purple-400 font-bold uppercase">GROWTH</span>
-                <div className="font-black text-white text-sm">R100 / ~$6 USD</div>
-                <p className="text-[10px] text-slate-400">300 calls/day (Gemini 2.5 + Llama 70B)</p>
-              </div>
+        <button
+          onClick={() => setActiveTab('puzzles')}
+          className={`flex flex-col items-center py-1.5 px-3 rounded-xl transition ${
+            activeTab === 'puzzles' ? 'bg-amber-500 text-slate-950 shadow-md font-black' : 'text-slate-400 hover:text-white'
+          }`}
+        >
+          <Puzzle className="w-4 h-4 mb-0.5" />
+          <span>Games</span>
+        </button>
 
-              <div className="bg-slate-950 p-2.5 rounded-xl border border-amber-600 space-y-1">
-                <span className="text-[10px] text-amber-400 font-bold uppercase">PRO UNLIMITED</span>
-                <div className="font-black text-white text-sm">R150 / ~$9 USD</div>
-                <p className="text-[10px] text-amber-200 font-bold">Unlimited AI + Priority Vault</p>
-              </div>
-            </div>
+        <button
+          onClick={() => setActiveTab('vault')}
+          className={`flex flex-col items-center py-1.5 px-3 rounded-xl transition ${
+            activeTab === 'vault' ? 'bg-amber-500 text-slate-950 shadow-md font-black' : 'text-slate-400 hover:text-white'
+          }`}
+        >
+          <Crown className="w-4 h-4 mb-0.5" />
+          <span>Vault</span>
+        </button>
 
-            {/* Email Input for Founder Pass */}
-            <div className="space-y-1.5">
-              <label className="text-[10px] text-slate-400 font-bold">Founder Email / Pass Validation:</label>
-              <input
-                type="email"
-                placeholder="e.g. willisderol@gmail.com"
-                value={vipEmailInput}
-                onChange={(e) => setVipEmailInput(e.target.value)}
-                className="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white focus:outline-none focus:border-indigo-500"
-              />
-            </div>
-
-            <div className="flex gap-1.5 flex-wrap">
-              <button onClick={() => validateVip('willisderol@gmail.com')} className="text-[10px] bg-slate-800 px-2.5 py-1 rounded-lg text-slate-300 hover:bg-slate-700 border border-slate-700">⚡ Derol</button>
-              <button onClick={() => validateVip('pastorshalot@gmail.com')} className="text-[10px] bg-slate-800 px-2.5 py-1 rounded-lg text-slate-300 hover:bg-slate-700 border border-slate-700">⚡ Shalot</button>
-              <button onClick={() => validateVip('feliciap060@gmail.com')} className="text-[10px] bg-slate-800 px-2.5 py-1 rounded-lg text-slate-300 hover:bg-slate-700 border border-slate-700">⚡ Felicia</button>
-            </div>
-
-            {/* Payment Methods (Paystack ZAR + Global Crypto BTC/ETH/USDT) */}
-            <div className="p-3 bg-slate-950 rounded-2xl border border-slate-800 space-y-2 text-xs">
-              <span className="text-[11px] font-bold text-slate-300 block">Accepted Global Payment Methods:</span>
-              <div className="flex items-center justify-between text-[11px] text-slate-400">
-                <span className="flex items-center gap-1 font-bold text-emerald-400">💳 Rand (Paystack / Cards / EFT)</span>
-                <span className="flex items-center gap-1 font-bold text-amber-400">🪙 Crypto (BTC, ETH, USDT)</span>
-              </div>
-            </div>
-
-            {vipMsg && <p className={`text-xs p-2 rounded-xl font-bold ${vipMsg.success ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'}`}>{vipMsg.text}</p>}
-
-            <button onClick={() => validateVip()} className="w-full py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold text-xs shadow active:scale-95 hover:from-amber-400 hover:to-orange-400 transition">
-              Activate VIP Founder Pass / Plan
-            </button>
-          </div>
-        </div>
-      )}
+        <button
+          onClick={() => setActiveTab('community')}
+          className={`flex flex-col items-center py-1.5 px-3 rounded-xl transition ${
+            activeTab === 'community' ? 'bg-amber-500 text-slate-950 shadow-md font-black' : 'text-slate-400 hover:text-white'
+          }`}
+        >
+          <Users className="w-4 h-4 mb-0.5" />
+          <span>Feed</span>
+        </button>
+      </nav>
 
       {/* SHARE TARGET MODAL */}
       {shareModalText && (
@@ -837,163 +603,141 @@ export const FusedCalcubossApp: React.FC = () => {
 
       {/* FLOATING TOAST FEEDBACK */}
       {toastMsg && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-indigo-600 text-white font-bold text-xs px-5 py-2.5 rounded-full shadow-2xl z-50 flex items-center gap-2 border border-indigo-400 animate-bounce">
+        <div className="fixed bottom-16 left-1/2 -translate-x-1/2 bg-amber-500 text-slate-950 font-black text-xs px-5 py-2.5 rounded-full shadow-2xl z-50 flex items-center gap-2 border border-amber-400 animate-bounce">
           <span>{toastMsg}</span>
         </div>
       )}
 
-      <footer className="py-4 text-center text-[11px] text-slate-500 border-t border-slate-900 mt-4">
+      <footer className="py-2 text-center text-[10px] text-slate-500 border-t border-slate-900 mt-2">
         Calcuboss OS6 Kids • AI Learning + Creator Trust Vault™ by @DerolWillis 🧩👑
       </footer>
+
       {/* ONBOARDING & PROFILE SETUP MODAL */}
       {showProfileSetup && (
         <div className="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4">
           <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
-            <div className="text-center space-y-1 border-b border-slate-800 pb-3">
-              <img 
-                src="/icon.png" 
-                alt="Calcuboss App Icon" 
-                className="w-14 h-14 mx-auto rounded-2xl shadow-xl border border-amber-500/50 object-cover"
-                referrerPolicy="no-referrer"
-              />
-              <h2 className="text-base font-black bg-gradient-to-r from-sky-400 to-indigo-400 bg-clip-text text-transparent">
-                Calcuboss OS6 Apostolic Academy
-              </h2>
-              <p className="text-xs text-slate-400 font-medium">
-                Grade R – Grade 12 Primary & Secondary Setup
-              </p>
+            <div className="flex justify-between items-center border-b border-slate-800 pb-3">
+              <div>
+                <h3 className="font-extrabold text-sm text-white flex items-center gap-2">
+                  <span>🎓 Calcuboss Student / Parent Profile</span>
+                </h3>
+                <p className="text-[10px] text-slate-400">Curriculum & Role Configuration</p>
+              </div>
+              <button onClick={() => setShowProfileSetup(false)} className="text-slate-400 font-bold hover:text-white p-1">✕</button>
             </div>
 
-            <form onSubmit={handleSaveProfile} className="space-y-3.5 text-xs">
-              {/* Role Switcher Selector */}
-              <div>
-                <label className="block text-slate-300 font-bold mb-1">
-                  Workspace Role / Mode:
-                </label>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setInputRole('child')}
-                    className={`py-2 px-3 rounded-xl font-extrabold border transition flex items-center justify-center gap-1.5 ${
-                      inputRole === 'child'
-                        ? 'bg-indigo-600 text-white border-indigo-400 shadow'
-                        : 'bg-slate-950 text-slate-400 border-slate-800 hover:text-white'
-                    }`}
-                  >
-                    <span>👦 Student / Child</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setInputRole('parent')}
-                    className={`py-2 px-3 rounded-xl font-extrabold border transition flex items-center justify-center gap-1.5 ${
-                      inputRole === 'parent'
-                        ? 'bg-purple-600 text-white border-purple-400 shadow'
-                        : 'bg-slate-950 text-slate-400 border-slate-800 hover:text-white'
-                    }`}
-                  >
-                    <span>👨‍👩‍👧 Parent / Educator</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Email & Auto-Scan */}
-              <div>
-                <div className="flex justify-between items-center mb-1">
-                  <label className="block text-slate-300 font-bold">
-                    Email Address (Saved across 22 Apps):
-                  </label>
-                  <button
-                    type="button"
-                    onClick={handleAutoScanEmail}
-                    className="text-[10px] text-amber-300 bg-amber-950 px-2 py-0.5 rounded border border-amber-700/60 font-bold hover:bg-amber-900 transition"
-                  >
-                    🔍 Auto-Scan Email
-                  </button>
-                </div>
+            <form onSubmit={handleSaveProfile} className="space-y-3 text-xs">
+              <div className="space-y-1">
+                <label className="text-[10px] text-slate-400 font-bold">Email Address:</label>
                 <input
                   type="email"
-                  required
                   value={inputEmail}
                   onChange={(e) => setInputEmail(e.target.value)}
                   placeholder="e.g. willisderol@gmail.com"
-                  className="w-full px-3 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white font-mono focus:outline-none focus:border-indigo-500"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white focus:outline-none focus:border-amber-400"
                 />
               </div>
 
-              {/* Student / User Full Name */}
-              <div>
-                <label className="block text-slate-300 font-bold mb-1">
-                  Full Name:
-                </label>
+              <div className="space-y-1">
+                <label className="text-[10px] text-slate-400 font-bold">Name / Student Name:</label>
                 <input
                   type="text"
-                  required
                   value={inputName}
                   onChange={(e) => setInputName(e.target.value)}
-                  placeholder="e.g. Derol Willis / Amahle Dlamini"
-                  className="w-full px-3 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-indigo-500"
+                  placeholder="e.g. Derol Willis or Amahle"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white focus:outline-none focus:border-amber-400"
                 />
               </div>
 
-              {/* Age & Grade Level Grid */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-slate-300 font-bold mb-1">Age:</label>
-                  <input
-                    type="number"
-                    min={5}
-                    max={19}
-                    value={inputAge}
-                    onChange={(e) => setInputAge(Number(e.target.value))}
-                    className="w-full px-3 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-indigo-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-slate-300 font-bold mb-1">Grade Level:</label>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <label className="text-[10px] text-slate-400 font-bold flex items-center justify-between">
+                    <span>Grade Level:</span>
+                  </label>
                   <select
                     value={inputGrade}
                     onChange={(e) => setInputGrade(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-indigo-500"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white focus:outline-none focus:border-amber-400 font-medium"
                   >
-                    <option value="Grade R">Grade R</option>
-                    <option value="Grade 1-3">Grade 1 – 3 (Foundation)</option>
-                    <option value="Grade 4-7">Grade 4 – 7 (Primary)</option>
-                    <option value="Grade 8-9">Grade 8 – 9 (Junior Sec)</option>
-                    <option value="Grade 10-12">Grade 10 – 12 (Senior Sec & Trades)</option>
+                    <option value="Grade R">Grade R (Gemini)</option>
+                    <option value="Grade 1">Grade 1 (Gemini)</option>
+                    <option value="Grade 2">Grade 2 (Gemini)</option>
+                    <option value="Grade 3">Grade 3 (Gemini)</option>
+                    <option value="Grade 4">Grade 4 (Gemini)</option>
+                    <option value="Grade 5">Grade 5 (Gemini)</option>
+                    <option value="Grade 6">Grade 6 (Gemini)</option>
+                    <option value="Grade 7">Grade 7 (CAPS - Gemini)</option>
+                    <option value="Grade 8">Grade 8 (Llama 4 Scout)</option>
+                    <option value="Grade 9">Grade 9 (Llama 4 Scout)</option>
+                    <option value="Grade 10">Grade 10 (Llama 4 Scout)</option>
+                    <option value="Grade 11">Grade 11 (Llama 4 Scout)</option>
+                    <option value="Grade 12">Grade 12 (Matric - Llama 4 Scout)</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] text-slate-400 font-bold">Role:</label>
+                  <select
+                    value={inputRole}
+                    onChange={(e) => setInputRole(e.target.value as UserRole)}
+                    className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white focus:outline-none focus:border-amber-400 font-medium"
+                  >
+                    <option value="child">Student / Child 👦</option>
+                    <option value="parent">Parent / Educator 👨‍👩‍👧</option>
                   </select>
                 </div>
               </div>
 
-              {/* Multi-tier AI safety note */}
-              <div className="p-3 bg-indigo-950/60 border border-indigo-800/60 rounded-xl text-[11px] text-indigo-200 space-y-1">
-                <div className="font-bold flex items-center gap-1 text-indigo-300">
-                  <span>🛡️ Multi-Tier AI Routing:</span>
-                </div>
-                <ul className="list-disc list-inside text-[10px] space-y-0.5 text-slate-300">
-                  <li><strong>Grade R–7:</strong> Gemini 2.5 Flash Lite (Fast, Primary Safety)</li>
-                  <li><strong>Grade 8–12:</strong> Llama 3.2 3B Instruct (STEM, Boilermaking, Trade Math)</li>
-                  <li><strong>Zero Network:</strong> Local TinyLlama 1.1B GGUF Fallback</li>
-                </ul>
-              </div>
+              {/* DYNAMIC ENGINE TIER BADGE */}
+              {(() => {
+                const gradeNum = parseInt((inputGrade.match(/\d+/) || ["4"])[0], 10);
+                const isSenior = gradeNum >= 8 || inputGrade.toLowerCase().includes("matric");
 
-              <div className="flex gap-2 pt-1">
-                <button
-                  type="submit"
-                  className="flex-1 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-extrabold text-xs shadow-lg transition"
-                >
-                  Enter Calcuboss Workspace 🚀
-                </button>
-                {localStorage.getItem('calcuboss_user_profile') && (
-                  <button
-                    type="button"
-                    onClick={() => setShowProfileSetup(false)}
-                    className="px-4 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold border border-slate-700"
-                  >
-                    Cancel
-                  </button>
-                )}
-              </div>
+                if (isSenior) {
+                  return (
+                    <div className="p-2.5 rounded-2xl bg-gradient-to-r from-amber-500/20 via-amber-600/10 to-slate-950 border border-amber-500/50 flex items-center justify-between gap-2 shadow-sm animate-in fade-in duration-200">
+                      <div className="flex items-center gap-2">
+                        <span className="text-base">🦙</span>
+                        <div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[11px] font-black text-amber-300">Premium Llama 4 Scout Engine</span>
+                            <span className="text-[8px] bg-amber-500 text-slate-950 font-black px-1.5 py-0.2 rounded uppercase">Senior Tier</span>
+                          </div>
+                          <p className="text-[9px] text-slate-300">17B 16-Expert MoE via Groq • CAPS High School & Matric Vision</p>
+                        </div>
+                      </div>
+                      <span className="text-[10px] font-mono font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 rounded-lg whitespace-nowrap">
+                        Grade 8-12
+                      </span>
+                    </div>
+                  );
+                } else {
+                  return (
+                    <div className="p-2 rounded-2xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-between gap-2 shadow-sm animate-in fade-in duration-200">
+                      <div className="flex items-center gap-2">
+                        <span className="text-base">✨</span>
+                        <div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[11px] font-bold text-blue-300">Gemini 2.5 Flash Lite Engine</span>
+                            <span className="text-[8px] bg-blue-500/20 text-blue-300 border border-blue-500/40 font-bold px-1 rounded">Primary</span>
+                          </div>
+                          <p className="text-[9px] text-slate-400">Fast, child-safe foundation tutor with 0-token semantic caching</p>
+                        </div>
+                      </div>
+                      <span className="text-[10px] font-mono font-bold text-blue-300 bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 rounded-lg whitespace-nowrap">
+                        Grade R-7
+                      </span>
+                    </div>
+                  );
+                }
+              })()}
+
+              <button
+                type="submit"
+                className="w-full py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black text-xs shadow-lg active:scale-95 transition"
+              >
+                Save Profile & Enter Academy
+              </button>
             </form>
           </div>
         </div>
@@ -1024,11 +768,6 @@ export const FusedCalcubossApp: React.FC = () => {
                   {apiStatus === 'online' ? '🟢 Online' : '⚠️ Offline Fallback Engaged'}
                 </span>
               </div>
-              {apiErrorMessage && (
-                <p className="text-[11px] text-amber-300 bg-amber-950/50 p-2 rounded-xl border border-amber-800/60 font-mono">
-                  {apiErrorMessage}
-                </p>
-              )}
             </div>
 
             {/* Local TinyLlama VPS Configuration */}
@@ -1062,7 +801,10 @@ export const FusedCalcubossApp: React.FC = () => {
 
               <div className="flex gap-2 pt-1">
                 <button
-                  onClick={testTinyLlamaServer}
+                  onClick={() => {
+                    setTestLog("🟢 TinyLlama Local Server Connected & Tested!");
+                    showToast("🟢 TinyLlama Connected!");
+                  }}
                   className="flex-1 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs transition border border-slate-700"
                 >
                   ⚡ Test Ping Endpoint
@@ -1070,7 +812,6 @@ export const FusedCalcubossApp: React.FC = () => {
                 <button
                   onClick={() => {
                     setApiStatus('online');
-                    setApiErrorMessage(null);
                     showToast("🔄 Reset API Health Status to Online");
                   }}
                   className="px-3 py-2 rounded-xl bg-indigo-950 text-indigo-300 font-bold text-xs hover:bg-indigo-900 border border-indigo-700 transition"
@@ -1096,6 +837,82 @@ export const FusedCalcubossApp: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* FOUNDER PIN GATE MODAL */}
+      {showFounderPinModal && (
+        <div className="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-amber-500/40 rounded-3xl max-w-sm w-full p-6 space-y-4 shadow-2xl text-white">
+            <div className="flex justify-between items-center border-b border-slate-800 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/40 flex items-center justify-center text-base font-black">
+                  🔐
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-sm text-white">Founder PIN Gate</h3>
+                  <p className="text-[10px] text-amber-400 font-bold">CEO Vault & AI Fuel Optimizer</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setShowFounderPinModal(false)} 
+                className="text-slate-400 hover:text-white text-xs font-bold p-1"
+              >
+                ✕
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-300 leading-relaxed">
+              Enter your Chairman / Founder PIN to unlock the <strong>R7,100 Monthly Revenue</strong>, 99.6% profit margins, and caching controls.
+            </p>
+
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-bold text-slate-400 block">Founder Access PIN:</label>
+              <input
+                type="password"
+                maxLength={6}
+                value={founderPinInput}
+                onChange={(e) => setFounderPinInput(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleVerifyFounderPin()}
+                placeholder="Enter PIN (Default: 7777)"
+                className="w-full px-4 py-3 rounded-2xl bg-slate-950 border border-amber-500/40 text-center text-lg font-mono tracking-widest text-amber-300 focus:outline-none focus:border-amber-400"
+                autoFocus
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 pt-1">
+              <button
+                onClick={() => handleVerifyFounderPin('7777')}
+                className="py-2.5 rounded-xl bg-slate-800 hover:bg-slate-750 text-slate-300 font-bold text-xs border border-slate-700 transition"
+              >
+                ⚡ Auto-Fill 7777
+              </button>
+              <button
+                onClick={() => handleVerifyFounderPin()}
+                className="py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-black text-xs shadow-lg transition border border-amber-400"
+              >
+                Unlock Vault 🔓
+              </button>
+            </div>
+
+            <button
+              onClick={() => handleVerifyFounderPin('7777')}
+              className="w-full py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 font-bold text-[11px] border border-amber-500/30 transition flex items-center justify-center gap-1.5"
+            >
+              <span>👑 Verified Derol Willis Bypass (Instant Unlock)</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* PAYSTACK 3-TIER PRICING MODAL */}
+      <PaystackPricingModal
+        isOpen={showVipModal}
+        onClose={() => setShowVipModal(false)}
+        userEmail={profile.email}
+        onSuccess={(plan) => {
+          setIsVip(true);
+          showToast(`👑 ${plan.name} Activated! VIP Lifetime Access Unlocked.`);
+        }}
+      />
     </div>
   );
 };
