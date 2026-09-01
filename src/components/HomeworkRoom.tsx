@@ -28,6 +28,8 @@ import confetti from 'canvas-confetti';
 import { UserProfile } from './FusedCalcubossApp';
 import { DEMKI_PRESETS, findDemkiPreset } from '../presets';
 import { generateSmartCodeFallback, routeDemki } from '../aiRouter';
+import { LearningRooms } from './LearningRooms';
+import { ParentCommunity } from './ParentCommunity';
 
 export interface TeacherItem {
   id: string;
@@ -364,6 +366,12 @@ export const HomeworkRoom: React.FC<HomeworkRoomProps> = ({
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl flex flex-col w-full text-slate-100">
       
+      {['calcuboss', 'treebo', 'msnova'].includes(teacher.id) && (
+        <div className="p-4 bg-slate-950 border-b border-slate-800">
+          <LearningRooms />
+        </div>
+      )}
+
       {/* ROOM HEADER */}
       <div className="p-3.5 bg-gradient-to-r from-slate-900 via-slate-850 to-slate-900 border-b border-slate-800 flex items-center justify-between">
         <div className="flex items-center gap-3">

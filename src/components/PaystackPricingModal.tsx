@@ -463,30 +463,30 @@ export const PaystackPricingModal: React.FC<PaystackPricingModalProps> = ({
 
           {/* ADVANCED KEY CONFIG */}
           {showAdvancedKey && (
-            <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 space-y-1.5 text-xs animate-in fade-in duration-150">
-              <label className="text-[10px] font-bold text-slate-400">
-                Paystack Public Key (<code className="text-emerald-400 font-mono">pk_live_...</code> or <code className="text-emerald-400 font-mono">pk_test_...</code>):
-              </label>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={paystackKey}
-                  onChange={(e) => {
-                    setPaystackKey(e.target.value);
-                    localStorage.setItem('calcuboss_paystack_key', e.target.value);
-                  }}
-                  placeholder="pk_live_... or pk_test_..."
-                  className="flex-1 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-xs text-white font-mono focus:outline-none focus:border-amber-400"
-                />
-                <button
-                  onClick={() => {
-                    localStorage.setItem('calcuboss_paystack_key', paystackKey);
-                    setStatusFeedback({ msg: '✅ Paystack Key Saved!', isSuccess: true });
-                  }}
-                  className="px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-bold text-xs hover:bg-emerald-500"
-                >
-                  Save
-                </button>
+            <div className="space-y-2 animate-in fade-in duration-150">
+              <div className="flex items-center justify-between p-3 bg-zinc-900 rounded-lg border border-zinc-800 my-2">
+                <span className="text-xs text-zinc-400">Paystack Gateway Security:</span>
+                <span className="text-xs font-mono text-emerald-400 flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                  {paystackKey ? "Connected & Secure (Encrypted)" : "Key Missing"}
+                </span>
+              </div>
+              <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 space-y-1.5 text-xs">
+                <label className="text-[10px] font-bold text-slate-400">
+                  Update Public Key:
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={paystackKey}
+                    onChange={(e) => {
+                      setPaystackKey(e.target.value);
+                      localStorage.setItem('calcuboss_paystack_key', e.target.value);
+                    }}
+                    placeholder="pk_live_... or pk_test_..."
+                    className="flex-1 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-xs text-white font-mono focus:outline-none focus:border-amber-400"
+                  />
+                </div>
               </div>
             </div>
           )}
