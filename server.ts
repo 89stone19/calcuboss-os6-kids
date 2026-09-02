@@ -213,7 +213,7 @@ const preloadedQuestions: Record<string, string[]> = {
 
 // Teacher System Prompts (School R-12 Homework Teachers)
 const teacherPrompts: Record<string, string> = {
-  nova: "You are Ms. Nova, a kind, warm English and Reading teacher for school kids age 6-14 (Grade R-7). Explain everything simply with engaging examples. Never use bad words or complex jargon. Ask questions back to check understanding. Keep answers concise, warm, and encouraging.",
+  msnova: "You are Ms. Nova, the fun, playful Phonics and Reading teacher for Grade R-7! 🌟 You love teaching the alphabet and sounds! When a child asks about ABCs or letters, start with 'A is for Apple 🍎, A-A-Apple!' or similar. Use lots of emojis, keep language very simple and super encouraging for little learners. If the child is in Grade R, prioritize fun rhymes and sounds!",
   treebo: "You are Treebo the Science Tree, a friendly living tree teacher with green leaves and glasses. You love Natural Sciences, biology, nature, and school science projects for Grade R-9. Speak with botanical cheer (use nature words like sprout, leaf, sunshine, roots). Explain simply for school kids and ask a fun science question at the end.",
   calcuboss: "You are Calcuboss, a cheerful blue calculator character wearing a tie and carrying a briefcase. You love school maths, arithmetic, algebra, geometry, and CAPS homework for Grade R-12! Explain math concepts with fun, clear step-by-step examples for learners.",
   music: "You are Teacher Music, an energetic beatmaker and rhythm coach. You turn math multiplication tables, science concepts, and vocabulary into catchy musical rhymes and rhythms for school kids!",
@@ -399,9 +399,28 @@ app.post("/api/subscribe", (req, res) => {
   res.json({ success: true, subscriberCount, message: "Subscription added successfully!" });
 });
 
+// Helper to detect language and translate to/from English
+async function translateLanguage(text: string, toEnglish: boolean): Promise<string> {
+  const systemPrompt = toEnglish 
+    ? "Detect the language of the user input. If it is not English, translate it to English. If it is already English, return it unchanged. Output ONLY the English text."
+    : "The user received an answer in English. Translate it to the original language the user used in the previous prompt. Output ONLY the translated text.";
+
+  const result = await callOpenRouterWithRotation(text, systemPrompt, "deepseek/deepseek-chat:free");
+  return result ? result.text : text;
+}
+
+// Helper to classify intent
+async function classifyIntent(text: string, grade: string): Promise<string> {
+  const systemPrompt = `You are a Router. Classify the user message into ONE of these labels: ABC_LETTERS, NUMBERS_COUNTING, MATHS, HISTORY_GEO, SCIENCE, MUSIC, STORY_GAMES.
+If Grade is R, 1, 2, 3 and message contains "ABC, letters, alphabet, A B C" -> ABC_LETTERS.
+Reply ONLY with the label. No explanation.`;
+  const result = await callOpenRouterWithRotation(`Message: "${text}" | Grade: "${grade}"`, systemPrompt, "google/gemini-2.5-flash-lite");
+  return result ? result.text.trim() : "MATHS"; // Default to MATHS
+}
+
 app.post("/api/chat", async (req, res) => {
   try {
-    const { question, subject = "math", teacherId = "calcuboss", grade = "Grade 4", isOffline = false } = req.body;
+    const { question, subject = "math", teacherId: originalTeacherId = "calcuboss", grade = "Grade 4", isOffline = false } = req.body;
     if (!question) {
       return res.status(400).json({ error: "Question is required" });
     }
@@ -423,6 +442,28 @@ app.post("/api/chat", async (req, res) => {
       });
     }
 
+    // 2. Language Routing (Multilingual support)
+    let processedQuestion = question;
+    let originalLanguage = "en";
+    
+    // Only attempt translation if not offline
+    if (!isOffline) {
+        const englishQuestion = await translateLanguage(question, true);
+        if (englishQuestion.toLowerCase().trim() !== question.toLowerCase().trim()) {
+            processedQuestion = englishQuestion;
+            originalLanguage = "translated"; // Simplified detection
+        }
+    }
+
+    // 3. Intent Routing
+    let teacherId = originalTeacherId;
+    if (!isOffline) {
+        const intent = await classifyIntent(processedQuestion, grade);
+        if (intent === "ABC_LETTERS") {
+            teacherId = "msnova";
+        }
+    }
+
     // Determine Grade and Route (School R-12 CAPS Only)
     const gradeNum = parseInt((grade.match(/\d+/) || ["4"])[0], 10);
     const isSeniorSchool = gradeNum >= 8 || grade.toLowerCase().includes("matric");
@@ -434,23 +475,28 @@ app.post("/api/chat", async (req, res) => {
 
     const isCodingQuery = 
       teacherId === "demki" ||
-      question.toLowerCase().includes("code") ||
-      question.toLowerCase().includes("calculator") ||
-      question.toLowerCase().includes("python") ||
-      question.toLowerCase().includes("debug") ||
-      question.toLowerCase().includes("scratch") ||
-      question.toLowerCase().includes("robot");
+      processedQuestion.toLowerCase().includes("code") ||
+      processedQuestion.toLowerCase().includes("calculator") ||
+      processedQuestion.toLowerCase().includes("python") ||
+      processedQuestion.toLowerCase().includes("debug") ||
+      processedQuestion.toLowerCase().includes("scratch") ||
+      processedQuestion.toLowerCase().includes("robot");
 
-    // 2. Call VPS Ollama / Gemini / OpenRouter Qwen Coder
+    // 4. Call VPS Ollama / Gemini / OpenRouter Qwen Coder
     let answerText = "";
     let effectiveModelUsed = "";
     const apiKey = process.env.GEMINI_API_KEY;
-    const systemPrompt = teacherPrompts[teacherId] || teacherPrompts.calcuboss;
+    
+    // Patch Calcuboss prompt for fallback
+    let systemPrompt = teacherPrompts[teacherId] || teacherPrompts.calcuboss;
+    if (teacherId === "calcuboss") {
+        systemPrompt = "You are Calcuboss OS6 Router. First check: Is this ABC/letters for Grade R? If YES, do NOT do maths. Switch to Ms Nova ABC mode immediately and teach A, B, C. If NO, then do maths. " + systemPrompt;
+    }
 
     // A. If coding query, try VPS Qwen 0.5B or OpenRouter Qwen 2.5 Coder
     if (isCodingQuery && !isOffline) {
       const vpsRes = await callVpsOllama(
-        `You are Demki, South African school coding teacher for Grade R-12. Give full working code. Do NOT repeat question. Do NOT say empty question. Give complete working code for: ${question}`,
+        `You are Demki, South African school coding teacher for Grade R-12. Give full working code. Do NOT repeat question. Do NOT say empty question. Give complete working code for: ${processedQuestion}`,
         true
       );
       if (vpsRes) {
@@ -458,7 +504,7 @@ app.post("/api/chat", async (req, res) => {
         effectiveModelUsed = vpsRes.modelUsed;
       } else {
         const orCoderRes = await callOpenRouterWithRotation(
-          `Target: Grade R-12 South African student. Provide complete, working code with simple explanation: ${question}`,
+          `Target: Grade R-12 South African student. Provide complete, working code with simple explanation: ${processedQuestion}`,
           systemPrompt,
           "qwen/qwen-2.5-coder-32b-instruct:free"
         );
@@ -479,7 +525,7 @@ app.post("/api/chat", async (req, res) => {
             {
               role: "user",
               parts: [
-                { text: `System Instruction: ${systemPrompt}\nTarget Audience: ${grade} school student.\nQuestion: ${question}` }
+                { text: `System Instruction: ${systemPrompt}\nTarget Audience: ${grade} school student.\nQuestion: ${processedQuestion}` }
               ]
             }
           ]
@@ -499,7 +545,7 @@ app.post("/api/chat", async (req, res) => {
     // C. If still empty or no Gemini key, rotate through OpenRouter Dual Keys & Free Model Pool
     if (!answerText && !isOffline) {
       const openRouterResult = await callOpenRouterWithRotation(
-        `Target Audience: ${grade} school student.\nQuestion: ${question}`,
+        `Target Audience: ${grade} school student.\nQuestion: ${processedQuestion}`,
         systemPrompt
       );
       if (openRouterResult) {
@@ -510,7 +556,7 @@ app.post("/api/chat", async (req, res) => {
 
     // D. Smart Local Knowledge & Code Fallback (NEVER parrot or say empty question)
     if (!answerText) {
-      const qLower = question.toLowerCase();
+      const qLower = processedQuestion.toLowerCase();
       if (isCodingQuery || teacherId === "demki") {
         if (qLower.includes("calculator") || qLower.includes("calc")) {
           answerText = `### 🧪 Python Calculator by Demki (Grade 8-12)
@@ -588,12 +634,18 @@ run_solver()
       }
     }
 
+    // 5. Translate answer back if necessary
+    let finalAnswer = answerText;
+    if (originalLanguage !== "en" && !isOffline) {
+        finalAnswer = await translateLanguage(answerText, false);
+    }
+
     // Save to cache
     totalAiCalls += 1;
     answersCache.set(normalized, {
       question,
       normalized,
-      answer: answerText,
+      answer: finalAnswer,
       subject,
       teacherId,
       hits: 1,
@@ -601,7 +653,7 @@ run_solver()
     });
 
     res.json({
-      answer: answerText,
+      answer: finalAnswer,
       cached: false,
       hits: 1,
       teacherId,

@@ -28,6 +28,7 @@ import confetti from 'canvas-confetti';
 import { UserProfile } from './FusedCalcubossApp';
 import { DEMKI_PRESETS, findDemkiPreset } from '../presets';
 import { generateSmartCodeFallback, routeDemki } from '../aiRouter';
+import { analyzeIntent } from '../utils/intentRouter';
 import { LearningRooms } from './LearningRooms';
 import { ParentCommunity } from './ParentCommunity';
 
@@ -249,7 +250,14 @@ export const HomeworkRoom: React.FC<HomeworkRoomProps> = ({
 
     const qLower = textToSend.toLowerCase();
     let reply = '';
-
+    
+    // Override teacher if intent is ABC_LETTERS and grade is early
+    let effectiveTeacherId = teacher.id;
+    const intent = analyzeIntent(textToSend, profile.grade || 'Grade 8');
+    if (intent === 'ABC_LETTERS' && /r|1|2|3/.test((profile.grade || '').toLowerCase())) {
+        effectiveTeacherId = 'msnova';
+    }
+    
     // Specialized Teacher Persona Response Generator
     if (teacher.id === 'music') {
       if (qLower.includes('7x') || qLower.includes('multiplication') || qLower.includes('times')) {
@@ -304,7 +312,7 @@ export const HomeworkRoom: React.FC<HomeworkRoomProps> = ({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           question: textToSend, 
-          teacherId: teacher.id, 
+          teacherId: effectiveTeacherId, 
           grade: profile.grade || 'Grade 8',
           subject: teacher.subject || 'Math'
         }),

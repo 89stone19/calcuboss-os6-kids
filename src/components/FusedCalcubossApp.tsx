@@ -36,7 +36,7 @@ const VIP_ACCOUNTS = [
 
 const TEACHERS: TeacherItem[] = [
   { id: 'calcuboss', name: 'Calcuboss', title: 'Maths, Arithmetic & Algebra', color: 'bg-amber-500', badge: 'amber', avatar: '🤖', desc: 'Your friendly calculator tutor for CAPS school maths!', voicePitch: 1.0 },
-  { id: 'music', name: 'Music', title: 'Mnemonics, Rhythm & Melodies', color: 'bg-indigo-500', badge: 'indigo', avatar: '🎵', desc: 'Making homework facts memorable with rhymes & beats!', voicePitch: 1.25 },
+  { id: 'music', name: 'Music', title: 'Mnemonics, Rhythm & Melodies', color: 'bg-indigo-500', badge: 'indigo', avatar: '🎵', desc: "Hello! I am Music! Let's learn with songs, rhythm & melodies!", voicePitch: 1.25 },
   { id: 'treebo', name: 'Treebo', title: 'Natural Sciences & Biology', color: 'bg-emerald-500', badge: 'emerald', avatar: '🌱', desc: 'Exploring ecosystems, nature, animals & science projects!', voicePitch: 0.9 },
   { id: 'msnova', name: 'Ms Nova', title: 'English, Reading & Grammar', color: 'bg-pink-500', badge: 'pink', avatar: '✨', desc: 'Your kind guide for reading, vocabulary & literature!', voicePitch: 1.2 },
   { id: 'admeess', name: 'Admeess', title: 'History, Society & Geography', color: 'bg-orange-500', badge: 'orange', avatar: '🎓', desc: 'Discovering geography, world heritage & social sciences!', voicePitch: 1.1 },
