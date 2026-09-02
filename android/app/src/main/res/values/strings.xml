@@ -4,4 +4,8 @@
     <string name="title_activity_main">Calcuboss OS6</string>
     <string name="package_name">com.calcuboss.os6</string>
     <string name="custom_url_scheme">com.calcuboss.os6</string>
+    <string name="pricing_tier_starter">Starter R50/month</string>
+    <string name="pricing_tier_scholar">Scholar R150/month</string>
+    <string name="pricing_tier_matric">Matric Master R200/month</string>
+    <string name="pricing_tier_coding">Code Analysis R350/month</string>
 </resources>
