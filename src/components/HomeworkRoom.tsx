@@ -22,15 +22,17 @@ import {
   ChevronRight,
   Zap,
   Mic,
-  MicOff
+  MicOff,
+  Paperclip
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { UserProfile } from './FusedCalcubossApp';
 import { DEMKI_PRESETS, findDemkiPreset } from '../presets';
-import { generateSmartCodeFallback, routeDemki } from '../aiRouter';
+import { generateSmartCodeFallback, generateDeepUnderstandingFallback, routeDemki } from '../aiRouter';
 import { analyzeIntent } from '../utils/intentRouter';
 import { LearningRooms } from './LearningRooms';
 import { ParentCommunity } from './ParentCommunity';
+import { ChatInputBar } from './ChatInputBar';
 
 export interface TeacherItem {
   id: string;
@@ -150,7 +152,7 @@ export const HomeworkRoom: React.FC<HomeworkRoomProps> = ({
   onOpenConfig
 }) => {
   const [activeSubTab, setActiveSubTab] = useState<'chat' | 'chart' | 'homework'>('chat');
-  const [messages, setMessages] = useState<{ role: 'bot' | 'user'; text: string; time: string }[]>([
+  const [messages, setMessages] = useState<{ role: 'bot' | 'user'; text: string; time: string; file?: any }[]>([
     {
       role: 'bot',
       text: getTeacherIntroMessage(teacher),
@@ -238,22 +240,27 @@ export const HomeworkRoom: React.FC<HomeworkRoomProps> = ({
     }
   };
 
-  const handleSendChat = async (overrideText?: string) => {
-    const textToSend = overrideText || inputMsg;
-    if (!textToSend.trim() || isSending) return;
+  const handleSendChat = async (overrideText?: string, attachedFile?: any) => {
+    const textToSend = overrideText !== undefined ? overrideText : inputMsg;
+    if ((!textToSend.trim() && !attachedFile) || isSending) return;
 
     const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    const userMsg = { role: 'user' as const, text: textToSend, time: timeStr };
+    const userMsg = { 
+      role: 'user' as const, 
+      text: textToSend || (attachedFile ? `Uploaded ${attachedFile.name}` : ''), 
+      time: timeStr,
+      file: attachedFile || undefined
+    };
     setMessages(prev => [...prev, userMsg]);
-    if (!overrideText) setInputMsg('');
+    if (overrideText === undefined) setInputMsg('');
     setIsSending(true);
 
-    const qLower = textToSend.toLowerCase();
+    const qLower = (textToSend || '').toLowerCase();
     let reply = '';
     
     // Override teacher if intent is ABC_LETTERS and grade is early
     let effectiveTeacherId = teacher.id;
-    const intent = analyzeIntent(textToSend, profile.grade || 'Grade 8');
+    const intent = analyzeIntent(textToSend, profile.grade || 'Grade R-3');
     if (intent === 'ABC_LETTERS' && /r|1|2|3/.test((profile.grade || '').toLowerCase())) {
         effectiveTeacherId = 'msnova';
     }
@@ -287,14 +294,15 @@ export const HomeworkRoom: React.FC<HomeworkRoomProps> = ({
       reply = `🎓 Admeess History & Society: From the pyramids of Giza to the kingdoms of Mapungubwe, every milestone in "${textToSend}" shaped human history! Let's explore the timeline! 🌍`;
     } else if (teacher.id === 'demki') {
       const matchedPreset = findDemkiPreset(textToSend);
-      if (matchedPreset) {
+      if (matchedPreset && !attachedFile) {
         reply = matchedPreset.response;
       } else {
-        const decision = routeDemki(textToSend, profile.grade);
+        // Hybrid AI Router: Qwen2 0.5B (Code) vs TinyLlama 1.1B (Deep Reasoning Grade R-3)
+        const decision = routeDemki(textToSend, profile.grade || 'Grade R-3', attachedFile);
         if (decision.isCode) {
           reply = generateSmartCodeFallback(textToSend);
         } else {
-          reply = `🧪 Demki Code & Robotics Lab: Let's solve "${textToSend}" with step-by-step logic! Step 1: Analyze inputs. Step 2: Calculate formulas. Step 3: Verify results! 🤖💻`;
+          reply = generateDeepUnderstandingFallback(textToSend);
         }
       }
     } else if (teacher.id === 'lolers') {
@@ -306,15 +314,16 @@ export const HomeworkRoom: React.FC<HomeworkRoomProps> = ({
     // Try cloud API if reachable
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 2500);
+      const timeoutId = setTimeout(() => controller.abort(), 6000);
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           question: textToSend, 
           teacherId: effectiveTeacherId, 
-          grade: profile.grade || 'Grade 8',
-          subject: teacher.subject || 'Math'
+          grade: profile.grade || 'Grade R-3',
+          subject: teacher.subject || 'Math',
+          fileData: attachedFile || null
         }),
         signal: controller.signal
       });
@@ -496,6 +505,17 @@ export const HomeworkRoom: React.FC<HomeworkRoomProps> = ({
                 )}
 
                 <div className="space-y-1 max-w-[82%]">
+                  {m.file && (
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900 border border-amber-500/40 text-amber-200 text-xs font-mono mb-1.5 shadow-sm">
+                      <Paperclip className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                      <span className="font-bold truncate max-w-[170px]">{m.file.name}</span>
+                      <span className="text-[10px] text-amber-300/70 font-sans">
+                        {m.file.size >= 1024 * 1024 
+                          ? `${(m.file.size / (1024 * 1024)).toFixed(1)}MB` 
+                          : `${Math.max(1, Math.round(m.file.size / 1024))}KB`}
+                      </span>
+                    </div>
+                  )}
                   <div
                     className={`p-3.5 rounded-2xl leading-relaxed shadow-sm ${
                       m.role === 'user'
@@ -871,77 +891,27 @@ export const HomeworkRoom: React.FC<HomeworkRoomProps> = ({
         </div>
       )}
 
-      {/* BOTTOM ACTION TOOLBAR (MATCHING VIDEO AT 00:04 & 00:06) */}
-      <div className="p-3 bg-slate-950 border-t border-slate-800 flex items-center gap-2">
-        {/* Speaker Button */}
-        <button
-          onClick={() => {
-            onToggleVoice();
-            if (!isVoiceEnabled) {
-              speakText(`Voice enabled. ${teacher.name} is ready!`);
-            }
-          }}
-          className={`p-2.5 rounded-xl border transition shrink-0 ${
-            isVoiceEnabled
-              ? 'bg-amber-500/20 text-amber-400 border-amber-500/40 shadow-sm'
-              : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-slate-200'
-          }`}
-          title="Toggle Teacher Voice Synthesis (Speaker)"
-        >
-          {isVoiceEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
-        </button>
-
-        {/* Clipboard / Notes Button */}
-        <button
-          onClick={() => {
-            const latestBot = messages.filter(m => m.role === 'bot').slice(-1)[0]?.text || teacher.desc;
-            navigator.clipboard.writeText(latestBot);
-            speakText("Notes copied to clipboard!");
-          }}
-          className="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-750 text-slate-300 border border-slate-700 transition shrink-0 hover:text-white"
-          title="Copy Latest Lesson Notes"
-        >
-          <FileText className="w-4 h-4" />
-        </button>
-
-        {/* Phone / Voice Call Button */}
-        <button
-          onClick={() => {
-            if (isCallActive) {
-              handleEndCall();
-            } else {
-              handleStartCall();
-            }
-          }}
-          className={`p-2.5 rounded-xl border transition shrink-0 ${
-            isCallActive
-              ? 'bg-rose-600 text-white border-rose-500 animate-pulse'
-              : 'bg-emerald-950 text-emerald-300 border-emerald-700 hover:bg-emerald-900'
-          }`}
-          title="Start Live Voice Tutor Call"
-        >
-          <PhoneCall className="w-4 h-4" />
-        </button>
-
-        {/* Text Input */}
-        <div className="flex-1 relative">
-          <input
-            type="text"
-            value={inputMsg}
-            onChange={(e) => setInputMsg(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSendChat()}
-            placeholder={`Ask ${teacher.name} a question...`}
-            className="w-full pl-3.5 pr-9 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400"
-          />
-          <button
-            onClick={() => handleSendChat()}
-            disabled={!inputMsg.trim() || isSending}
-            className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 disabled:opacity-40 disabled:hover:bg-amber-500 text-slate-950 transition shadow"
-          >
-            <Send className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      </div>
+      {/* BOTTOM ACTION TOOLBAR WITH CHAT INPUT BAR (4 BUTTONS + FILE UPLOAD LOGIC) */}
+      <ChatInputBar
+        onSendMessage={(text, file) => handleSendChat(text, file)}
+        activeTeacherName={teacher.name}
+        isVoiceEnabled={isVoiceEnabled}
+        onToggleVoice={onToggleVoice}
+        onCopyNotes={() => {
+          const latestBot = messages.filter(m => m.role === 'bot').slice(-1)[0]?.text || teacher.desc;
+          navigator.clipboard.writeText(latestBot);
+          speakText("Notes copied to clipboard!");
+        }}
+        isCallActive={isCallActive}
+        onToggleCall={() => {
+          if (isCallActive) {
+            handleEndCall();
+          } else {
+            handleStartCall();
+          }
+        }}
+        disabled={isSending}
+      />
 
     </div>
   );

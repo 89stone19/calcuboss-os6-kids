@@ -83,7 +83,7 @@ export const KidsChat: React.FC<KidsChatProps> = ({
     window.speechSynthesis.speak(utterance);
   };
 
-  const handleSendMessage = async (textToSend: string, fileData: ChatMessage['fileData'] | null) => {
+  const handleSendMessage = async (textToSend: string, fileData: ChatMessage['fileData'] | null = null) => {
     if (!textToSend.trim() && !fileData) return;
 
     const userMsg: ChatMessage = {

@@ -28,6 +28,13 @@ export interface ChatMessage {
     content?: string;
     dataUrl?: string;
   };
+  file?: {
+    name: string;
+    size: number;
+    type: string;
+    content?: string;
+    dataUrl?: string;
+  };
 }
 
 export interface AIModel {
