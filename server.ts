@@ -1,6 +1,7 @@
 import express from "express";
 import path from "path";
 import { createServer as createViteServer } from "vite";
+import { processChat } from "./chat-router";
 import { GoogleGenAI } from "@google/genai";
 
 const app = express();
@@ -217,7 +218,7 @@ const teacherPrompts: Record<string, string> = {
   treebo: "You are Treebo the Science Tree, a friendly living tree teacher with green leaves and glasses. You love Natural Sciences, biology, nature, and school science projects for Grade R-9. Speak with botanical cheer (use nature words like sprout, leaf, sunshine, roots). Explain simply for school kids and ask a fun science question at the end.",
   calcuboss: "You are Calcuboss, a cheerful blue calculator character wearing a tie and carrying a briefcase. You love school maths, arithmetic, algebra, geometry, and CAPS homework for Grade R-12! Explain math concepts with fun, clear step-by-step examples for learners.",
   music: "You are Teacher Music, an energetic beatmaker and rhythm coach. You turn math multiplication tables, science concepts, and vocabulary into catchy musical rhymes and rhythms for school kids!",
-  demki: "You are Demki, the science, mental math, coding & robotics teacher for South Africa R-12! Mission: Make South African kids build, not just memorize! Teach: Physical Science (CAPS), Mental Math, Coding (Scratch for R-7, Python for 8-12), Robotics logic (If/Then, sensors, loops), and home experiments. Style: Fun, simple, use emojis, show code examples, encourage building. Example: '4x - 6 = 2x + 10' -> solve step-by-step, then say 'Now let's code a solver for this in Python!' Flag: R-12-CODE-YOUNG-TO-BUILD-SA 🇿🇦",
+  demki: "You are Demki, the science, mental math, coding & robotics teacher for South Africa R-12! Mission: Make South African kids build, not just memorize! You are also 'Demki's Code Debugger & Detective'—when kids ask for help with code, follow these 3 steps: 1. Check error line number. 2. Verify int() vs str(). 3. Check 4-space indentation! Teach: Physical Science (CAPS), Mental Math, Coding (Scratch for R-7, Python for 8-12), Robotics logic (If/Then, sensors, loops), and home experiments. Style: Fun, simple, use emojis, show code examples, encourage building. Example: '4x - 6 = 2x + 10' -> solve step-by-step, then say 'Now let's code a solver for this in Python!' Flag: R-12-CODE-YOUNG-TO-BUILD-SA 🇿🇦",
   lolers: "You are Lolers, the playful puzzle and comedy teacher. You make tricky homework problems fun with hilarious riddles and memory hooks."
 };
 
@@ -420,8 +421,8 @@ Reply ONLY with the label. No explanation.`;
 
 app.post("/api/chat", async (req, res) => {
   try {
-    const { question, subject = "math", teacherId: originalTeacherId = "calcuboss", grade = "Grade 4", isOffline = false } = req.body;
-    if (!question) {
+    const { question, fileData, subject = "math", teacherId: originalTeacherId = "calcuboss", grade = "Grade 4", isOffline = false } = req.body;
+    if (!question && !fileData) {
       return res.status(400).json({ error: "Question is required" });
     }
 
@@ -519,19 +520,9 @@ app.post("/api/chat", async (req, res) => {
     if (!answerText && apiKey && !isOffline) {
       try {
         const ai = new GoogleGenAI({ apiKey });
-        const response = await ai.models.generateContent({
-          model: "gemini-2.5-flash-lite",
-          contents: [
-            {
-              role: "user",
-              parts: [
-                { text: `System Instruction: ${systemPrompt}\nTarget Audience: ${grade} school student.\nQuestion: ${processedQuestion}` }
-              ]
-            }
-          ]
-        });
-
-        answerText = response.text || "";
+        
+        // Use the chat-router to process the request
+        answerText = await processChat(ai, fileData, processedQuestion, systemPrompt, grade);
         if (answerText) {
           effectiveModelUsed = isSeniorSchool 
             ? "Llama 4 Scout 17B 16E Instruct (Groq - Grade 8-12)" 

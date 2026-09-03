@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { ChatInputBar } from './ChatInputBar';
 import { Teacher, ChatMessage } from '../types';
 import { TeacherAvatar } from './TeacherAvatar';
 import { TextReaderBar } from './TextReaderBar';
-import { Send, Sparkles, Volume2, HelpCircle, BookOpen, Atom, Calculator, Zap, CheckCircle, Copy, Check, MessageCircle } from 'lucide-react';
+import { Sparkles, Volume2, HelpCircle, BookOpen, Atom, Calculator, Zap, CheckCircle, Copy, Check, MessageCircle, File, X } from 'lucide-react';
 
 interface KidsChatProps {
   activeTeacher: Teacher;
@@ -82,19 +83,18 @@ export const KidsChat: React.FC<KidsChatProps> = ({
     window.speechSynthesis.speak(utterance);
   };
 
-  const handleSendMessage = async (textToSend?: string) => {
-    const q = textToSend || inputValue;
-    if (!q.trim()) return;
+  const handleSendMessage = async (textToSend: string, fileData: ChatMessage['fileData'] | null) => {
+    if (!textToSend.trim() && !fileData) return;
 
     const userMsg: ChatMessage = {
       id: Date.now().toString(),
       sender: 'user',
-      text: q,
+      text: textToSend,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      fileData: fileData || undefined,
     };
 
     setMessages((prev) => [...prev, userMsg]);
-    if (!textToSend) setInputValue('');
     setIsThinking(true);
 
     try {
@@ -102,10 +102,11 @@ export const KidsChat: React.FC<KidsChatProps> = ({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          question: q,
+          question: textToSend,
           subject: subjectId,
           teacherId: activeTeacher.id,
           grade: 'Grade 4',
+          fileData: userMsg.fileData, // Pass file data
         }),
       });
 
@@ -253,6 +254,19 @@ export const KidsChat: React.FC<KidsChatProps> = ({
                     }`}
                   >
                     <p className="whitespace-pre-wrap">{msg.text}</p>
+                    {msg.fileData && (
+                      <div className="mt-3 p-3 bg-black/20 rounded-xl flex items-center gap-3 border border-white/10">
+                        {msg.fileData.type.startsWith('image/') ? (
+                          <img src={msg.fileData.dataUrl} alt="preview" className="w-12 h-12 rounded-lg object-cover" />
+                        ) : (
+                          <File className="w-8 h-8 text-purple-300" />
+                        )}
+                        <div>
+                          <p className="text-xs font-bold text-white truncate max-w-[150px]">{msg.fileData.name}</p>
+                          <p className="text-[10px] text-white/50">{(msg.fileData.size / 1024).toFixed(1)} KB</p>
+                        </div>
+                      </div>
+                    )}
                     
                     {/* Caching badge if message was served from cache */}
                     {!isUser && msg.cached !== undefined && (
@@ -325,22 +339,7 @@ export const KidsChat: React.FC<KidsChatProps> = ({
         )}
 
         {/* Input Bar */}
-        <div className="p-4 bg-black/20 border-t border-white/10 flex items-center gap-3">
-          <input
-            type="text"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-            placeholder={`Ask ${activeTeacher.name} a question (e.g. math, science, or reading)...`}
-            className="flex-1 bg-white/5 border border-white/20 rounded-2xl px-5 py-3 text-sm text-white placeholder-white/40 focus:outline-none focus:border-purple-400/60 transition-all"
-          />
-          <button
-            onClick={() => handleSendMessage()}
-            className="bg-purple-600 hover:bg-purple-500 text-white p-3 rounded-2xl shadow-lg transition-all flex items-center justify-center shrink-0 border border-purple-400/30"
-          >
-            <Send className="w-5 h-5" />
-          </button>
-        </div>
+        <ChatInputBar onSendMessage={handleSendMessage} activeTeacherName={activeTeacher.name} />
 
       </div>
 

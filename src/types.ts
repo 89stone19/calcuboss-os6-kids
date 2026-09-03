@@ -21,6 +21,13 @@ export interface ChatMessage {
   subject?: string;
   modelUsed?: string;
   cost?: string;
+  fileData?: {
+    name: string;
+    size: number;
+    type: string;
+    content?: string;
+    dataUrl?: string;
+  };
 }
 
 export interface AIModel {
