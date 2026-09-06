@@ -6,3 +6,5 @@ coverage/
 *.log
 .env*
 !.env.example
+src/config/aiRouter.js
+.env
