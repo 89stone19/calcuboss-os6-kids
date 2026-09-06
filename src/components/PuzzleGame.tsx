@@ -394,26 +394,29 @@ export const PuzzleGame: React.FC = () => {
         </div>
       </div>
 
-      {/* Puzzle Selector Bar */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+      {/* Puzzle Selector Bar (3D Floating Previews 2026 Founder Mode) */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 relative z-10 perspective-1000">
         {defaultPuzzles.map((p) => (
           <button
             key={p.id}
             onClick={() => startNewGame(p)}
-            className={`flex items-center gap-2.5 p-2.5 rounded-2xl border text-left transition active:scale-98 ${
+            style={{ transformStyle: 'preserve-3d' }}
+            className={`flex flex-col sm:flex-row items-center gap-2.5 p-3 rounded-2xl border text-center sm:text-left transition-all duration-500 hover:rotate-y-12 hover:-translate-y-1 active:scale-95 group ${
               selectedPuzzle.id === p.id
-                ? 'bg-purple-600/30 border-purple-400 shadow-lg text-white ring-2 ring-purple-400/40'
-                : 'bg-white/5 border-white/10 text-white/70 hover:bg-white/10 hover:text-white'
+                ? 'bg-[#ffb400]/20 border-[#ffb400]/50 shadow-[0_10px_30px_rgba(255,180,0,0.3)] text-white'
+                : 'bg-white/[0.04] backdrop-blur-[12px] border-white/10 text-white/60 hover:bg-white/[0.08] hover:text-white shadow-[0_8px_32px_rgba(0,0,0,0.15)]'
             }`}
           >
-            <div className="w-10 h-10 rounded-xl overflow-hidden bg-black/30 flex-shrink-0 border border-white/20">
-              <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover" />
+            <div className="w-12 h-12 rounded-xl overflow-hidden bg-black/40 flex-shrink-0 border border-white/20 relative shadow-inner group-hover:shadow-[0_0_15px_rgba(255,255,255,0.4)] transition-shadow">
+              <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+              {/* Glossy Lock Icon Overlay (simulated for non-active if needed, here just a shine) */}
+              <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
             </div>
-            <div className="overflow-hidden">
-              <div className="text-xs font-bold truncate">{p.name}</div>
-              <div className="text-[10px] text-white/50 truncate flex items-center gap-1">
-                <span>{p.teacher.avatar}</span>
-                <span>{p.teacher.name}</span>
+            <div className="overflow-hidden flex-1 w-full">
+              <div className="text-xs font-bold truncate drop-shadow-sm">{p.name}</div>
+              <div className="text-[10px] text-white/50 truncate flex items-center justify-center sm:justify-start gap-1 mt-0.5">
+                <span className="drop-shadow-sm">{p.teacher.avatar}</span>
+                <span className="drop-shadow-sm">{p.teacher.name}</span>
               </div>
             </div>
           </button>
@@ -444,7 +447,7 @@ export const PuzzleGame: React.FC = () => {
             </div>
           )}
 
-          <div className="grid grid-cols-3 gap-2 w-full max-w-md aspect-square bg-black/40 p-3 rounded-2xl border border-white/10 relative">
+          <div className="grid grid-cols-3 gap-3 w-full max-w-md aspect-square bg-white/[0.04] backdrop-blur-xl p-4 rounded-3xl border border-white/10 relative shadow-[0_8px_32px_rgba(0,0,0,0.2)] perspective-1000">
             {boardSlots.map((pieceIndex, slotIndex) => {
               const isPlaced = pieceIndex !== -1;
               const isCorrectSlot = pieceIndex === slotIndex;
@@ -459,18 +462,19 @@ export const PuzzleGame: React.FC = () => {
                     if (pieceIndex !== -1) setHoveredPiece(pieceIndex);
                   }}
                   onMouseLeave={() => setHoveredPiece(null)}
-                  className={`aspect-square rounded-xl overflow-hidden border-2 transition cursor-pointer relative flex items-center justify-center bg-slate-900/80 active:scale-98 ${
+                  style={{ transformStyle: 'preserve-3d' }}
+                  className={`aspect-square rounded-2xl overflow-hidden border-2 transition-all duration-300 cursor-pointer relative flex items-center justify-center active:scale-95 group ${
                     isTargetDesignatedSlot
-                      ? 'border-amber-400 ring-4 ring-amber-400/80 shadow-[0_0_25px_rgba(245,158,11,0.8)] z-10 scale-[1.03] animate-pulse bg-amber-950/30'
+                      ? 'border-[#ffb400] ring-4 ring-[#ffb400]/40 shadow-[0_0_25px_rgba(255,180,0,0.5)] z-10 scale-[1.03] animate-pulse bg-amber-500/20 rotate-x-6 rotate-y-6'
                       : !isPlaced
-                      ? 'border-dashed border-white/20 hover:border-purple-400 hover:bg-white/5'
+                      ? 'border-dashed border-white/20 hover:border-white/50 hover:bg-white/10'
                       : feedback === 'wrong'
-                      ? 'border-rose-500 ring-4 ring-rose-500/40 bg-rose-950/40 animate-pulse'
+                      ? 'border-rose-500 ring-4 ring-rose-500/40 bg-rose-500/20 animate-pulse rotate-z-3'
                       : feedback === 'right'
-                      ? 'border-emerald-400 ring-4 ring-emerald-400/40 shadow-[0_0_15px_rgba(16,185,129,0.5)]'
+                      ? 'border-emerald-400 ring-4 ring-emerald-400/40 shadow-[0_0_20px_rgba(16,185,129,0.5)]'
                       : isCorrectSlot
-                      ? 'border-emerald-500/80'
-                      : 'border-purple-500/60'
+                      ? 'border-emerald-500/60 shadow-[0_4px_15px_rgba(0,0,0,0.3)]'
+                      : 'border-white/30 shadow-[0_8px_20px_rgba(0,0,0,0.4)] hover:-translate-y-1 hover:rotate-y-6 hover:shadow-[0_15px_30px_rgba(0,0,0,0.6)]'
                   }`}
                 >
                   {!isPlaced ? (
@@ -586,7 +590,7 @@ export const PuzzleGame: React.FC = () => {
             </div>
 
             {/* Tray Pieces */}
-            <div className="grid grid-cols-3 gap-2.5 min-h-[200px] bg-black/40 p-3.5 rounded-2xl border border-white/10 items-center justify-center">
+            <div className="grid grid-cols-3 gap-3 min-h-[200px] bg-white/[0.04] p-4 rounded-3xl border border-white/10 items-center justify-center shadow-inner perspective-1000">
               {trayPieces.length === 0 ? (
                 <div className="col-span-3 text-center py-8 text-white/40 text-xs font-bold">
                   🎉 All pieces placed on board! Check your slots.
@@ -602,20 +606,21 @@ export const PuzzleGame: React.FC = () => {
                       onMouseEnter={() => setHoveredPiece(pieceIndex)}
                       onMouseLeave={() => setHoveredPiece(null)}
                       onTouchStart={() => setHoveredPiece(pieceIndex)}
-                      className={`aspect-square rounded-xl overflow-hidden border-2 cursor-pointer transition transform hover:scale-105 shadow-md relative active:scale-95 ${
-                        isSelected 
-                          ? 'border-yellow-400 ring-4 ring-yellow-400/60 scale-105 z-10' 
-                          : isHovered
-                          ? 'border-amber-400 ring-4 ring-amber-400/40 scale-105'
-                          : 'border-white/20 hover:border-purple-400'
-                      }`}
-                      style={{
+                      style={{ 
                         backgroundImage: `url(${selectedPuzzle.imageUrl})`,
                         backgroundSize: '300% 300%',
-                        backgroundPosition: `${(pieceIndex % 3) * 50}% ${Math.floor(pieceIndex / 3) * 50}%`
+                        backgroundPosition: `${(pieceIndex % 3) * 50}% ${Math.floor(pieceIndex / 3) * 50}%`,
+                        transformStyle: 'preserve-3d'
                       }}
+                      className={`aspect-square rounded-2xl overflow-hidden border-2 cursor-pointer transition-all duration-300 transform relative active:scale-95 ${
+                        isSelected 
+                          ? 'border-[#ffb400] ring-4 ring-[#ffb400]/60 scale-110 shadow-[0_10px_30px_rgba(255,180,0,0.6)] z-20 rotate-x-12 rotate-y-12' 
+                          : isHovered
+                          ? 'border-amber-400 ring-4 ring-amber-400/40 scale-105 shadow-[0_15px_30px_rgba(255,180,0,0.4)] z-10 hover:-translate-y-2'
+                          : 'border-white/30 shadow-[0_8px_20px_rgba(0,0,0,0.3)] hover:border-white/60 hover:-translate-y-1 hover:rotate-y-12'
+                      }`}
                     >
-                      <div className="absolute top-1 left-1 bg-black/70 text-white text-[9px] font-mono px-1 py-0.5 rounded">
+                      <div className="absolute top-1 left-1 bg-black/50 backdrop-blur-md text-white text-[9px] font-mono px-1.5 py-0.5 rounded shadow-sm">
                         #{pieceIndex + 1}
                       </div>
                     </div>

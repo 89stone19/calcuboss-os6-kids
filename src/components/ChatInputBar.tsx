@@ -131,20 +131,20 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
   const effectiveVoiceOn = onToggleVoice ? isVoiceEnabled : localVoiceActive;
 
   return (
-    <div className="p-3 bg-slate-950 border-t border-slate-800 flex flex-col gap-2 w-full">
+    <div className="p-3 bg-white/[0.04] backdrop-blur-md border-t border-white/10 flex flex-col gap-2 w-full z-20">
       {/* File Preview Chip above input: "mycode.py 1.2MB [X]" */}
       {selectedFile && (
-        <div className="flex items-center gap-2 bg-amber-950/70 border border-amber-500/50 text-amber-200 px-3 py-1.5 rounded-xl text-xs font-mono shadow-sm animate-in fade-in duration-150">
-          <Paperclip className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+        <div className="flex items-center gap-2 bg-amber-500/20 backdrop-blur-md border border-amber-500/40 text-amber-100 px-3 py-1.5 rounded-xl text-xs font-mono shadow-sm animate-in fade-in duration-150">
+          <Paperclip className="w-3.5 h-3.5 text-amber-300 shrink-0" />
           <span className="font-bold truncate max-w-[200px]">{selectedFile.name}</span>
-          <span className="text-[10px] text-amber-300/80 font-sans">{formatFileSize(selectedFile.size)}</span>
+          <span className="text-[10px] text-amber-200/80 font-sans">{formatFileSize(selectedFile.size)}</span>
           <button
             type="button"
             onClick={() => {
               setSelectedFile(null);
               if (fileInputRef.current) fileInputRef.current.value = '';
             }}
-            className="ml-auto p-1 hover:bg-amber-900/80 text-amber-400 hover:text-white rounded-lg transition"
+            className="ml-auto p-1 hover:bg-amber-500/30 text-amber-300 hover:text-white rounded-lg transition"
             title="Remove file"
           >
             <X className="w-3.5 h-3.5" />
@@ -158,10 +158,10 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
         <button
           type="button"
           onClick={handleSpeakerClick}
-          className={`p-2.5 rounded-xl border transition shrink-0 ${
+          className={`p-2.5 rounded-full border transition shrink-0 shadow-lg ${
             effectiveVoiceOn
-              ? 'bg-amber-500/20 text-amber-400 border-amber-500/40 shadow-sm'
-              : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-slate-200'
+              ? 'bg-[#ffb400] text-black border-transparent'
+              : 'bg-white/[0.08] backdrop-blur-md text-white/60 border-white/15 hover:bg-white/10 hover:text-white'
           }`}
           title="Toggle Teacher Voice Synthesis (Speaker)"
         >
@@ -172,7 +172,7 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
         <button
           type="button"
           onClick={handleNotesClick}
-          className="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-750 text-slate-300 border border-slate-700 transition shrink-0 hover:text-white"
+          className="p-2.5 rounded-full bg-white/[0.08] backdrop-blur-md hover:bg-white/10 text-white/60 hover:text-white border border-white/15 transition shrink-0 shadow-lg"
           title="Copy / Share Latest Lesson Notes"
         >
           {copiedFeedback ? <Check className="w-4 h-4 text-emerald-400" /> : <FileText className="w-4 h-4" />}
@@ -182,26 +182,26 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
         <button
           type="button"
           onClick={handlePhoneClick}
-          className={`p-2.5 rounded-xl border transition shrink-0 ${
+          className={`p-2.5 rounded-full border transition shrink-0 shadow-lg ${
             isCallActive
-              ? 'bg-rose-600 text-white border-rose-500 animate-pulse'
-              : 'bg-emerald-950 text-emerald-300 border-emerald-700 hover:bg-emerald-900'
+              ? 'bg-rose-500 text-white border-transparent animate-pulse'
+              : 'bg-white/[0.08] backdrop-blur-md text-emerald-300 border-white/15 hover:bg-emerald-500/20'
           }`}
           title="Start Live Voice Tutor Call"
         >
           {isCallActive ? <PhoneOff className="w-4 h-4" /> : <PhoneCall className="w-4 h-4" />}
         </button>
 
-        {/* Input Container with NEW 4th button (Yellow Paperclip) INSIDE on left edge */}
-        <div className="flex-1 relative flex items-center">
+        {/* Input Container - Glassmorphic Pill */}
+        <div className="flex-1 relative flex items-center p-1 rounded-full bg-white/[0.08] backdrop-blur-xl border border-white/15 shadow-inner">
           {/* NEW 4th button: Paperclip 📎 icon, yellow background, INSIDE the "Ask Demki.." input on left edge */}
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="absolute left-1.5 top-1/2 -translate-y-1/2 p-1.5 rounded-lg bg-amber-400 hover:bg-amber-300 active:scale-95 text-slate-950 font-bold shadow-md transition-all flex items-center justify-center z-10"
+            className="p-2 rounded-full bg-[#ffb400] hover:brightness-110 active:scale-95 text-black font-bold shadow-md transition-all flex items-center justify-center shrink-0"
             title="Attach Code or Homework File (.py, .js, .png, etc.)"
           >
-            <Paperclip className="w-4 h-4 text-slate-950 stroke-[2.5]" />
+            <Paperclip className="w-4 h-4 stroke-[2.5]" />
           </button>
 
           {/* Hidden File Picker */}
@@ -219,8 +219,8 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-            placeholder={`Ask ${activeTeacherName} a question...`}
-            className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 transition"
+            placeholder={`Ask ${activeTeacherName}...`}
+            className="flex-1 px-3 bg-transparent text-xs text-white placeholder:text-white/40 focus:outline-none transition"
           />
 
           {/* Send Arrow Button inside right edge */}
@@ -228,7 +228,7 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
             type="button"
             onClick={handleSend}
             disabled={(!inputValue.trim() && !selectedFile) || disabled}
-            className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 disabled:opacity-40 disabled:hover:bg-amber-500 text-slate-950 transition shadow"
+            className="p-2 rounded-full bg-[#ffb400] hover:brightness-110 disabled:opacity-40 disabled:hover:brightness-100 text-black transition shadow-md shrink-0"
             title="Send Message"
           >
             <Send className="w-3.5 h-3.5" />

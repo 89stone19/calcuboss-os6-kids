@@ -44,6 +44,13 @@ export const DEMKI_PRESETS: DemkiPreset[] = [
     tier: "R350"
   },
   {
+    id: "line_17_zero_division",
+    trigger: "line 17 | why check zero | divide by zero | zero division",
+    label: "🛡️ Line 17 Zero Check",
+    response: "### 🧠 Demki's Deep Reasoning: Why Check Zero on Line 17?\n\nIf we divide by zero, **maths breaks and the computer crashes, so we guard!** 🛡️\n\n1. **Mathematical Reality**: Division by zero is undefined! No number multiplied by 0 can give 10.\n2. **Computer Execution Crash**: In Python, `num1 / 0` triggers an unhandled `ZeroDivisionError` that crashes the calculator.\n3. **Line 17 Defensive Guard**:\n```python\nif num2 == 0:\n    print('⚠️ Error: Cannot divide by zero! Check 4-space indent!')\n    continue\n```\nBy checking `if num2 == 0:` before division and calling `continue`, the program stays alive and lets the student try again!\n\n**3 Steps to Debug:** 1. Check line number 2. Verify int()/float() 3. Check 4-space indent! 🚀",
+    tier: "VIP R350"
+  },
+  {
     id: "robotics_logic",
     trigger: "robotics | robot | sensor | logic",
     label: "🤖 Robotics Logic",

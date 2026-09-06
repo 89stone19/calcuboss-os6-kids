@@ -95,40 +95,73 @@ Question: ${question}`,
 
 export function generateSmartCodeFallback(question: string): string {
   const q = question.toLowerCase();
+
+  // Deep Llama Brain: Line 17 / Division by zero explanation
+  if (q.includes("line 17") || q.includes("why check zero") || q.includes("divide by zero") || q.includes("zero division")) {
+    return `### 🧠 Demki's Deep Reasoning: Why Check Zero on Line 17?
+**Question**: _"Explain line 17, why check zero?"_
+
+If we divide by zero, **maths breaks and the computer crashes, so we guard!** 🛡️
+
+Here is the deep mathematical and computer science breakdown:
+1. **Mathematical Reality**: 
+   - How many zeros fit into 10? An infinite amount! There is no single finite answer. Division by zero is undefined in mathematics.
+2. **Computer Execution Crash**:
+   - When Python encounters \`result = num1 / 0\`, the CPU hardware raises a fatal trap called \`ZeroDivisionError\`. Without line 17, your app crashes instantly!
+3. **Line 17 Defensive Guard**:
+   \`\`\`python
+   # Line 17 Guard:
+   if num2 == 0:
+       print("⚠️ Error: Cannot divide by zero! Check 4-space indent!")
+       continue  # Skips the rest of the loop and asks again safely!
+   \`\`\`
+   By checking \`if num2 == 0:\` **before** dividing, we protect the user experience and keep the program running smoothly!
+
+**Demki's 3-Step Debugger Rule:**
+1. **Check Line Number**: Always verify line 17 where arithmetic operations happen!
+2. **Verify Type**: Ensure numbers are cast via \`float()\`!
+3. **Defensive Guards**: Always catch zero denominators before computing! 🚀`;
+  }
   
   if (q.includes("calculator") || q.includes("calc")) {
-    return `### 🧪 Python Calculator by Demki (Grade R-3 to Grade 12)
+    return `### 🧪 Python Calculator by Demki - Calcuboss OS6 Final (Grade 8-12)
 \`\`\`python
-# Simple Calculator: Like counting building blocks! 🧱
+# 🧪 Python Calculator by Demki - Calcuboss OS6 Final (Grade 8-12)
 print("=== 🇿🇦 CALCUBOSS PYTHON CALCULATOR ===")
 
-num1 = float(input("First number: "))
-op = input("Choose operation (+, -, *, /): ")
-num2 = float(input("Second number: "))
+while True:
+    try:
+        num1 = float(input("First number (or 'q' to quit): "))
+        op = input("Operation (+, -, *, /): ")
+        num2 = float(input("Second number: "))
 
-if op == "+":
-    result = num1 + num2
-    print(f"Result: {num1} + {num2} = {result} ✅")
-elif op == "-":
-    result = num1 - num2
-    print(f"Result: {num1} - {num2} = {result} ✅")
-elif op == "*":
-    result = num1 * num2
-    print(f"Result: {num1} * {num2} = {result} ✅")
-elif op == "/":
-    if num2 != 0:
-        result = num1 / num2
-        print(f"Result: {num1} / {num2} = {result} ✅")
-    else:
-        print("⚠️ Math Error: Cannot divide by zero!")
-else:
-    print("Invalid operator!")
+        if op == "+":
+            result = num1 + num2
+        elif op == "-":
+            result = num1 - num2
+        elif op == "*":
+            result = num1 * num2
+        elif op == "/":
+            if num2 == 0:
+                print("⚠️ Error: Cannot divide by zero! Check 4-space indent!")
+                continue
+            result = num1 / num2
+        else:
+            print("Invalid operator! Use + - * /")
+            continue
+
+        print(f"Result: {num1} {op} {num2} = {result} ✅")
+    
+    except ValueError:
+        print("⚠️ Input error: Type numbers only! Verify int() vs float() vs str()")
+        print("**3 Steps to Debug:** 1. Check line number 2. Verify int()/float() 3. Check 4-space indent!")
+        break
 \`\`\`
 
-**Demki's Deep Understanding Guide (Ages 5-9):**
-1. **Inputs are like toy boxes**: \`float(input(...))\` catches the numbers you type.
-2. **If/Else is like choosing paths**: The computer checks if you wanted plus or minus!
-3. **Print shows your answer**: It writes the final calculation neatly onto the screen! 🎯`;
+**Why this Final Version is VIP Grade:**
+1. **\`while True\` Loop**: Students don't need to re-run the script after each sum.
+2. **Line 17 Zero Division Guard**: Prevents \`ZeroDivisionError\` from crashing Python.
+3. **\`try / except ValueError\`**: Catches invalid string characters with Demki's 3-Step Debugger protocol! 🎯`;
   }
 
   if (q.includes("debug") || q.includes("error") || q.includes("bug")) {

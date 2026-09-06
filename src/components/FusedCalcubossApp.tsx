@@ -246,115 +246,124 @@ export const FusedCalcubossApp: React.FC = () => {
   const displayedTeachers = showAllTeachers ? TEACHERS : TEACHERS.slice(0, 4);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between font-sans antialiased p-2 sm:p-4">
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between font-sans antialiased p-2 sm:p-4 relative overflow-x-hidden">
+      {/* Ambient Aurora Drift Background Layer */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10" aria-hidden="true">
+        <div className="aurora-bg absolute -top-32 -left-32 w-96 h-96 bg-gradient-to-br from-indigo-500/15 via-purple-500/10 to-amber-500/10 rounded-full blur-3xl" />
+        <div className="aurora-bg absolute top-1/3 -right-32 w-80 h-80 bg-gradient-to-tr from-amber-500/10 via-purple-500/15 to-indigo-500/10 rounded-full blur-3xl" />
+      </div>
       
-      {/* TOP HEADER MATCHING VIDEO */}
-      <header className="w-full max-w-2xl mx-auto flex items-center justify-between py-2 border-b border-slate-900">
-        <div className="flex items-center gap-2">
-          <div className="w-9 h-9 rounded-xl bg-slate-950 border border-amber-500/40 flex items-center justify-center shadow-lg">
-            <Crown className="w-5 h-5 text-amber-400 fill-amber-400" />
-          </div>
+      {/* TOP HEADER MATCHING VIDEO - 2026 GLASSMORPHISM */}
+      <header className="w-full max-w-2xl mx-auto flex items-center justify-between p-3 bg-white/[0.04] backdrop-blur-[24px] border border-white/10 rounded-full shadow-[0_8px_32px_rgba(0,0,0,0.25)] relative z-10">
+        <div className="flex items-center gap-3 pl-1">
           <div>
-            <h1 className="text-base font-black text-white tracking-tight flex items-center gap-1.5">
-              <span>Calcuboss OS6</span>
+            <h1 className="text-lg font-black text-white tracking-tight flex items-center gap-1.5 drop-shadow-md">
+              <span>Calcuboss</span>
+              <span className="text-white/80 font-medium">OS6</span>
             </h1>
-            <p className="text-[10px] text-slate-400 font-medium flex items-center gap-1.5">
-              <span>{profile.grade}</span>
-              <span className="text-slate-600">•</span>
-              <span className={(parseInt((profile.grade.match(/\d+/) || ["4"])[0], 10) >= 8 || profile.grade.toLowerCase().includes("matric")) ? "text-amber-400 font-bold" : "text-blue-400 font-medium"}>
-                {(parseInt((profile.grade.match(/\d+/) || ["4"])[0], 10) >= 8 || profile.grade.toLowerCase().includes("matric")) ? "🦙 Llama 4 Scout" : "✨ Gemini Lite"}
+            <div className="flex items-center gap-1 mt-0.5">
+              <span className="text-[9px] bg-[#9333ea]/30 text-[#d8b4fe] border border-[#9333ea]/50 px-2 py-0.5 rounded-full font-bold shadow-inner">
+                {profile.grade}
               </span>
-              <span className="text-slate-600">•</span>
-              <span>South Africa 🇿🇦</span>
-            </p>
+              <span className={`text-[9px] px-2 py-0.5 rounded-full font-bold shadow-inner border flex items-center gap-1 ${
+                (parseInt((profile.grade.match(/\d+/) || ["4"])[0], 10) >= 8 || profile.grade.toLowerCase().includes("matric")) 
+                  ? 'bg-amber-500/30 text-amber-300 border-amber-500/50' 
+                  : 'bg-cyan-500/30 text-cyan-300 border-cyan-500/50'
+              }`}>
+                {(parseInt((profile.grade.match(/\d+/) || ["4"])[0], 10) >= 8 || profile.grade.toLowerCase().includes("matric")) ? '🦙 Llama 4 Scout' : '✨ Gemini Lite'}
+              </span>
+            </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 pr-1">
+          {/* SA Flag Icon simulated */}
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-500 via-yellow-400 to-blue-600 border border-white/20 flex items-center justify-center text-[10px] shadow-inner overflow-hidden">
+             🇿🇦
+          </div>
+
           {/* Notification Bell */}
           <button 
             onClick={() => showToast("🔔 All AI Teacher Squad models cached & operational!")}
-            className="p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white relative transition shadow-sm"
+            className="w-10 h-10 rounded-full bg-white/[0.08] border border-white/10 text-white hover:bg-white/10 relative transition shadow-sm flex items-center justify-center backdrop-blur-md"
           >
-            <Bell className="w-4 h-4" />
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-slate-900"></span>
+            <Bell className="w-5 h-5 drop-shadow-sm" />
+            <span className="absolute top-2 right-2 w-2.5 h-2.5 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)] border border-slate-900"></span>
           </button>
 
           {/* Derol Willis Founder Avatar */}
           <button
             onClick={() => setShowProfileSetup(true)}
-            className="flex items-center gap-2 p-1 pr-2.5 rounded-full bg-slate-900 border border-slate-800 hover:border-slate-700 transition"
+            className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 border border-white/20 hover:border-white/40 transition flex items-center justify-center text-sm font-black text-white shadow-[0_0_15px_rgba(99,102,241,0.5)] relative"
             title="View Profile Settings"
           >
-            <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-amber-500 to-indigo-600 flex items-center justify-center text-xs font-black text-white shadow relative">
-              <span>DW</span>
-              <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 border border-slate-900"></span>
-            </div>
-            <span className="text-[11px] font-bold text-slate-200 hidden sm:inline">{profile.name.split(' ')[0]}</span>
+            {profile.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'DW'}
+            <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-[#10b981] border-2 border-slate-900 shadow-[0_0_5px_rgba(16,185,129,0.8)]"></span>
           </button>
         </div>
       </header>
 
       {/* QUICK PROFILE & VIP CARDS ROW (MATCHING VIDEO AT 00:01 - 00:03) */}
-      <div className="w-full max-w-2xl mx-auto grid grid-cols-2 gap-2 my-2">
-        {/* Student Mode Card */}
+      <div className="w-full max-w-2xl mx-auto grid grid-cols-2 gap-2 my-2 relative z-10">
+        {/* Student Mode Card - 2026 Glassmorphism */}
         <div 
           onClick={toggleUserRole}
-          className="p-3 bg-slate-900 hover:bg-slate-850 border border-slate-800 rounded-2xl flex items-center gap-3 cursor-pointer transition shadow-md active:scale-98"
+          className="p-3 bg-white/[0.08] backdrop-blur-[24px] border border-white/15 rounded-3xl flex flex-col justify-center cursor-pointer transition shadow-[0_8px_32px_rgba(0,0,0,0.25)] active:scale-98 relative overflow-hidden group"
         >
-          <div className="w-10 h-10 rounded-xl bg-indigo-950 border border-indigo-700/60 flex items-center justify-center text-indigo-400">
-            <GraduationCap className="w-5 h-5" />
+          <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-white/10 to-transparent pointer-events-none" />
+          <div className="text-[10px] font-extrabold text-indigo-300 uppercase tracking-wider mb-1 bg-white/10 w-fit px-2 py-0.5 rounded-full border border-white/10 shadow-inner">Mode</div>
+          <div className="text-sm font-black text-white flex items-center gap-2 mt-1 z-10">
+            {accountMode === 'founder' ? 'Founder Mode' : (profile.role === 'parent' ? 'Parent Mode' : 'Student Mode')}
           </div>
-          <div>
-            <div className="text-[10px] font-extrabold text-indigo-400 uppercase tracking-wider">Mode</div>
-            <div className="text-xs font-black text-white">
-              {accountMode === 'founder' ? '👑 Founder Mode' : (profile.role === 'parent' ? 'Parent Mode' : 'Student Mode')}
-            </div>
+          <div className="flex items-center gap-1.5 mt-2 z-10 text-xs font-bold text-white/80">
+            <span>{accountMode === 'founder' ? '🎓👑' : '🎓'}</span>
+            <span className={accountMode === 'founder' ? 'text-[#ffb400]' : ''}>{accountMode === 'founder' ? 'Founder' : 'Student'}</span>
           </div>
         </div>
 
         {/* Derol Willis (Founder) Card - 5 Taps unlocks Founder PIN Gate */}
         <div 
           onClick={handleAccountCardTap}
-          className="p-3 bg-slate-900 hover:bg-slate-850 border border-slate-800 rounded-2xl flex items-center justify-between cursor-pointer transition shadow-md active:scale-98"
+          className="p-3 bg-white/[0.08] backdrop-blur-[24px] border border-white/15 rounded-3xl flex flex-col justify-center cursor-pointer transition shadow-[0_8px_32px_rgba(0,0,0,0.25)] active:scale-98 relative overflow-hidden group"
         >
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-amber-950 border border-amber-600/50 flex items-center justify-center text-amber-300 font-bold text-xs">
-              {accountMode === 'founder' ? '👑' : '👨‍💼'}
-            </div>
-            <div>
-              <div className="text-[10px] font-extrabold text-amber-400 uppercase tracking-wider flex items-center gap-1">
-                <span>Account</span>
-                {accountMode === 'founder' && (
-                  <span className="text-[8px] bg-amber-500/20 text-amber-300 px-1 rounded font-black border border-amber-500/40">CEO</span>
-                )}
-              </div>
-              <div className="text-xs font-black text-white truncate max-w-[100px]">
-                {profile.name}
-              </div>
-            </div>
+          <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-white/10 to-transparent pointer-events-none" />
+          <div className="flex justify-between items-center mb-1 z-10">
+             <div className="text-[10px] font-extrabold text-amber-300 uppercase tracking-wider bg-white/10 w-fit px-2 py-0.5 rounded-full border border-white/10 shadow-inner">
+               Account CEO
+             </div>
+             <div className="text-[9px] text-white/40 font-mono">
+               {founderTapCount > 0 && `${founderTapCount}/5`}
+             </div>
           </div>
-          <div className="text-[9px] text-slate-500 font-mono">
-            {founderTapCount > 0 && `${founderTapCount}/5`}
+          <div className="text-sm font-black text-white truncate z-10 mt-1">
+            {accountMode === 'founder' ? 'CEO Derol Willis (F...)' : profile.name}
+          </div>
+          <div className="flex items-center gap-1.5 mt-2 z-10 text-xl font-bold text-white/80 h-[24px]">
+             {accountMode === 'founder' ? '👑' : '👨‍💼'}
           </div>
         </div>
 
         {/* VIP ACTIVE Toggle Card (Full Width) */}
-        <div className="col-span-2 p-3 bg-gradient-to-r from-slate-900 via-slate-850 to-slate-900 border border-slate-800 rounded-2xl flex items-center justify-between shadow-md">
+        <div className="col-span-2 p-3 bg-gradient-to-r from-white/[0.12] to-white/[0.06] backdrop-blur-[24px] border border-[#ffb400]/40 rounded-3xl flex items-center justify-between shadow-[0_8px_32px_rgba(0,0,0,0.25)] relative overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-r from-[#ffb400]/20 to-transparent pointer-events-none mix-blend-overlay" />
+          <div className="absolute -left-10 -top-10 w-32 h-32 bg-[#ffb400]/30 rounded-full blur-2xl pointer-events-none" />
+          
           <div 
             onClick={() => setShowVipModal(true)}
-            className="flex items-center gap-3 cursor-pointer hover:opacity-90 transition"
+            className="flex items-center gap-3 cursor-pointer hover:opacity-90 transition z-10"
           >
-            <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400">
-              <Award className="w-5 h-5" />
+            <div className="w-12 h-12 flex items-center justify-center text-[#ffb400] text-3xl drop-shadow-[0_0_15px_rgba(255,180,0,0.8)]">
+              🎗️
             </div>
             <div>
-              <div className="flex items-center gap-1.5">
-                <span className="text-xs font-black text-white">VIP ACTIVE</span>
-                <span className="text-[9px] bg-amber-500/20 text-amber-300 border border-amber-500/40 px-1.5 py-0.2 rounded font-bold">LIFETIME</span>
-                <span className="text-[9px] text-amber-400 underline ml-1">View Plans</span>
+              <div className="flex items-center gap-2">
+                <span className="text-lg font-black text-[#ffb400] tracking-wide drop-shadow-md">VIP ACTIVE</span>
+                <span className="text-[10px] bg-white/20 text-amber-200 border border-white/30 px-2 py-0.5 rounded-full font-bold uppercase backdrop-blur-md shadow-inner">LIFETIME</span>
               </div>
-              <p className="text-[10px] text-slate-400">Full AI teacher squad, growth charts & solver</p>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <span className="text-[11px] text-white font-bold hover:underline">View Plans →</span>
+              </div>
+              <p className="text-[11px] text-white/70 mt-0.5 leading-tight">Full AI teacher squad, growth charts<br/>& solver</p>
             </div>
           </div>
 
@@ -365,13 +374,13 @@ export const FusedCalcubossApp: React.FC = () => {
               setIsVip(next);
               showToast(next ? "👑 VIP Mode Activated!" : "VIP Mode Paused");
             }}
-            className={`w-12 h-6.5 rounded-full p-0.5 transition-colors duration-200 ease-in-out focus:outline-none flex items-center ${
-              isVip ? 'bg-emerald-500' : 'bg-slate-700'
+            className={`w-14 h-8 rounded-full p-1 transition-colors duration-200 ease-in-out focus:outline-none flex items-center shadow-inner z-10 border ${
+              isVip ? 'bg-[#4ade80] border-[#22c55e]' : 'bg-white/20 border-white/10'
             }`}
           >
             <div
-              className={`w-5.5 h-5.5 rounded-full bg-white shadow-md transform transition-transform duration-200 ease-in-out ${
-                isVip ? 'translate-x-5.5' : 'translate-x-0.5'
+              className={`w-6 h-6 rounded-full bg-white shadow-[0_2px_10px_rgba(0,0,0,0.3)] transform transition-transform duration-200 ease-in-out ${
+                isVip ? 'translate-x-6' : 'translate-x-0'
               }`}
             />
           </button>
@@ -379,50 +388,62 @@ export const FusedCalcubossApp: React.FC = () => {
       </div>
 
       {/* SCHOOL KIDS AI TEACHER SQUAD SECTION (MATCHING VIDEO) */}
-      <div className="max-w-2xl mx-auto w-full my-2 bg-slate-900 border border-slate-800 rounded-2xl p-3.5 space-y-3">
-        <div className="flex justify-between items-center text-xs">
+      <div className="max-w-2xl mx-auto w-full my-2 relative z-10">
+        <div className="flex justify-between items-center text-xs mb-3 px-2">
           <div className="flex items-center gap-2">
-            <span className="font-extrabold text-white text-sm">School Kids AI Teacher Squad</span>
+            <span className="font-extrabold text-white text-sm drop-shadow-md">School Kids AI Teacher Squad</span>
           </div>
           <button
             onClick={() => setShowAllTeachers(!showAllTeachers)}
-            className="text-indigo-400 hover:text-indigo-300 font-extrabold text-xs transition"
+            className="text-white/60 hover:text-white font-extrabold text-xs transition drop-shadow-sm"
           >
             {showAllTeachers ? 'Show Less' : 'See All'}
           </button>
         </div>
 
         {/* Teachers Grid/Row */}
-        <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
-          {displayedTeachers.map((t) => (
+        <div className="grid grid-cols-4 sm:grid-cols-8 gap-3 px-1">
+          {displayedTeachers.map((t, idx) => (
             <button
               key={t.id}
               onClick={() => {
                 setSelectedTeacher(t);
                 setActiveTab('chat');
               }}
-              className={`flex flex-col items-center p-2 rounded-2xl transition-all duration-150 ${
+              className={`flex flex-col items-center p-3 rounded-[20px] transition-all duration-300 relative overflow-hidden group shadow-[0_8px_32px_rgba(0,0,0,0.15)] ${
                 selectedTeacher.id === t.id && activeTab === 'chat'
-                  ? 'bg-amber-500/20 border-2 border-amber-400 ring-2 ring-amber-400/20 scale-105 shadow-lg'
-                  : 'bg-slate-950/70 border border-slate-800 hover:border-slate-700 hover:bg-slate-800'
+                  ? 'bg-white/[0.15] border border-white/40 ring-1 ring-[#ffb400]/50 scale-105 shadow-[0_0_20px_rgba(255,180,0,0.3)]'
+                  : 'bg-white/[0.04] backdrop-blur-[12px] border border-white/10 hover:bg-white/[0.08] hover:border-white/20'
               }`}
             >
-              <div className="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center text-xl shadow-inner mb-1">
+              {/* Dynamic Gradient Glow based on teacher color */}
+              <div 
+                className={`absolute inset-0 opacity-20 bg-gradient-to-br transition-opacity duration-300 group-hover:opacity-40 ${
+                  idx === 0 ? 'from-[#ffb400] to-orange-500' :
+                  idx === 1 ? 'from-purple-500 to-indigo-500' :
+                  idx === 2 ? 'from-emerald-400 to-green-500' :
+                  idx === 3 ? 'from-pink-500 to-rose-400' :
+                  idx === 4 ? 'from-blue-400 to-cyan-500' :
+                  idx === 5 ? 'from-teal-400 to-emerald-500' :
+                  idx === 6 ? 'from-fuchsia-500 to-purple-500' : 'from-indigo-400 to-blue-500'
+                }`}
+              />
+              <div className="w-12 h-12 rounded-[14px] bg-white/[0.1] border border-white/20 flex items-center justify-center text-2xl shadow-inner mb-2 z-10 backdrop-blur-md">
                 {t.avatar}
               </div>
-              <span className="text-[10px] font-bold text-slate-200 truncate w-full text-center">{t.name}</span>
+              <span className="text-[10px] font-bold text-white truncate w-full text-center z-10 drop-shadow-md">{t.name}</span>
             </button>
           ))}
 
           {/* + Chat Pill button with purple badge */}
           <button
             onClick={() => setActiveTab('chat')}
-            className="flex flex-col items-center p-2 rounded-2xl bg-indigo-950/80 border border-indigo-700/80 hover:bg-indigo-900 transition active:scale-95"
+            className="flex flex-col items-center p-3 rounded-[20px] bg-[#6366f1]/20 backdrop-blur-[12px] border border-[#6366f1]/40 hover:bg-[#6366f1]/30 transition active:scale-95 shadow-[0_8px_32px_rgba(99,102,241,0.2)] group"
           >
-            <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white text-lg shadow-md mb-1">
+            <div className="w-12 h-12 rounded-[14px] bg-[#6366f1]/80 border border-white/20 flex items-center justify-center text-white text-xl shadow-inner mb-2 z-10">
               💬
             </div>
-            <span className="text-[10px] font-extrabold text-indigo-300">Chat</span>
+            <span className="text-[10px] font-extrabold text-[#c7d2fe] drop-shadow-md">Chat</span>
           </button>
         </div>
       </div>
@@ -454,65 +475,65 @@ export const FusedCalcubossApp: React.FC = () => {
         {activeTab === 'canvas' && <LifeCanvas isVoiceEnabled={isVoiceEnabled} />}
       </main>
 
-      {/* BOTTOM MOBILE APP NAVIGATION BAR */}
-      <nav className="max-w-2xl mx-auto w-full mt-3 bg-slate-900/95 backdrop-blur-md border border-slate-800 rounded-2xl p-1.5 flex justify-around text-[10px] font-extrabold shadow-2xl">
+      {/* BOTTOM MOBILE APP NAVIGATION BAR - FOUNDER 2026 GLASS DOCK */}
+      <nav className="max-w-2xl mx-auto w-full mt-3 flex justify-between p-2 mx-2 rounded-full bg-white/[0.06] backdrop-blur-[20px] border border-white/10 text-[10px] shadow-[0_8px_32px_rgba(0,0,0,0.25)] relative z-20">
         <button
           onClick={() => setActiveTab('chat')}
-          className={`flex flex-col items-center py-1.5 px-3 rounded-xl transition ${
-            activeTab === 'chat' ? 'bg-amber-500 text-slate-950 shadow-md font-black' : 'text-slate-400 hover:text-white'
+          className={`flex flex-col items-center py-2 px-4 rounded-full transition ${
+            activeTab === 'chat' ? 'bg-[#ffb400] text-black font-bold shadow-lg' : 'text-white/60 hover:bg-white/10'
           }`}
         >
-          <MessageSquare className="w-4 h-4 mb-0.5" />
+          <span className="text-base mb-0.5">💬</span>
           <span>Room</span>
         </button>
 
         <button
           onClick={() => setActiveTab('profit')}
-          className={`flex flex-col items-center py-1.5 px-3 rounded-xl transition ${
-            activeTab === 'profit' ? 'bg-amber-500 text-slate-950 shadow-md font-black' : 'text-slate-400 hover:text-white'
+          className={`flex flex-col items-center py-2 px-4 rounded-full transition ${
+            activeTab === 'profit' ? 'bg-[#ffb400] text-black font-bold shadow-lg' : 'text-white/60 hover:bg-white/10'
           }`}
         >
-          <BarChart3 className="w-4 h-4 mb-0.5" />
+          <span className="text-base mb-0.5">📈</span>
           <span>Stats</span>
         </button>
 
         <button
           onClick={() => setActiveTab('canvas')}
-          className={`flex flex-col items-center py-1.5 px-3 rounded-xl transition ${
-            activeTab === 'canvas' ? 'bg-amber-500 text-slate-950 shadow-md font-black' : 'text-slate-400 hover:text-white'
+          className={`flex flex-col items-center py-2 px-4 rounded-full transition ${
+            activeTab === 'canvas' ? 'bg-[#ffb400] text-black font-bold shadow-lg' : 'text-white/60 hover:bg-white/10'
           }`}
         >
-          <Palette className="w-4 h-4 mb-0.5" />
+          <span className="text-base mb-0.5">🎨</span>
           <span>Canvas</span>
         </button>
 
         <button
           onClick={() => setActiveTab('puzzles')}
-          className={`flex flex-col items-center py-1.5 px-3 rounded-xl transition ${
-            activeTab === 'puzzles' ? 'bg-amber-500 text-slate-950 shadow-md font-black' : 'text-slate-400 hover:text-white'
+          className={`flex flex-col items-center py-2 px-4 rounded-full transition ${
+            activeTab === 'puzzles' ? 'bg-[#ffb400] text-black font-bold shadow-lg' : 'text-white/60 hover:bg-white/10'
           }`}
         >
-          <Puzzle className="w-4 h-4 mb-0.5" />
+          <span className="text-base mb-0.5">🧩</span>
           <span>Games</span>
         </button>
 
         <button
           onClick={() => setActiveTab('vault')}
-          className={`flex flex-col items-center py-1.5 px-3 rounded-xl transition ${
-            activeTab === 'vault' ? 'bg-amber-500 text-slate-950 shadow-md font-black' : 'text-slate-400 hover:text-white'
+          className={`flex flex-col items-center py-2 px-4 rounded-full transition ${
+            activeTab === 'vault' ? 'bg-[#ffb400] text-black font-bold shadow-lg' : 'text-white/60 hover:bg-white/10'
           }`}
         >
-          <Crown className="w-4 h-4 mb-0.5" />
+          <span className="text-base mb-0.5">👑</span>
           <span>Vault</span>
         </button>
 
         <button
           onClick={() => setActiveTab('community')}
-          className={`flex flex-col items-center py-1.5 px-3 rounded-xl transition ${
-            activeTab === 'community' ? 'bg-amber-500 text-slate-950 shadow-md font-black' : 'text-slate-400 hover:text-white'
+          className={`flex flex-col items-center py-2 px-4 rounded-full transition ${
+            activeTab === 'community' ? 'bg-[#ffb400] text-black font-bold shadow-lg' : 'text-white/60 hover:bg-white/10'
           }`}
         >
-          <Users className="w-4 h-4 mb-0.5" />
+          <span className="text-base mb-0.5">👥</span>
           <span>Feed</span>
         </button>
       </nav>

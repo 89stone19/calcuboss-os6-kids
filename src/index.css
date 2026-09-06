@@ -1,1 +1,14 @@
 @import "tailwindcss";
+
+@keyframes aurora-drift {
+  0% {
+    filter: hue-rotate(0deg);
+  }
+  100% {
+    filter: hue-rotate(60deg);
+  }
+}
+
+.aurora-bg {
+  animation: aurora-drift 15s infinite alternate;
+}

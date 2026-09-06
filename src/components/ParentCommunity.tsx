@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Trophy, MessageCircle, Gift, Fuel, ShieldCheck, Send, Sparkles, Award, CheckCircle, Share2, Users, Heart, Key, Youtube, Play, Video, ExternalLink, ThumbsUp } from 'lucide-react';
+import { Trophy, MessageCircle, Gift, Fuel, ShieldCheck, Send, Sparkles, Award, CheckCircle, Share2, Users, Heart, Key, Youtube, Play, Video, ExternalLink, ThumbsUp, Download, Code, Copy, FileCode } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
 
 interface LeaderboardEntry {
@@ -110,6 +110,7 @@ export const ParentCommunity: React.FC = () => {
   const [successNotice, setSuccessNotice] = useState('');
   const [parentEmailInput, setParentEmailInput] = useState('');
   const [paymentLoading, setPaymentLoading] = useState(false);
+  const [copiedPyCode, setCopiedPyCode] = useState(false);
 
   const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
 
@@ -468,6 +469,66 @@ export const ParentCommunity: React.FC = () => {
                   {paymentLoading ? 'Processing...' : 'Pay R50 Fuel'}
                 </button>
               </div>
+            </div>
+          </div>
+
+          {/* Demki VIP Python Coding Resource Card */}
+          <div className="bg-gradient-to-br from-purple-950/60 to-slate-900 border border-amber-500/40 rounded-3xl p-6 shadow-2xl space-y-4 relative overflow-hidden">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 shrink-0">
+                  <FileCode className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-mono uppercase bg-amber-400 text-slate-950 font-black px-2 py-0.5 rounded-md">VIP R350 Tier</span>
+                    <span className="text-xs font-bold text-amber-300">Demki Final Python Solver</span>
+                  </div>
+                  <h3 className="font-extrabold text-white text-base">calcuboss_calculator.py</h3>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  onClick={() => {
+                    const code = `# 🧪 Python Calculator by Demki - Calcuboss OS6 Final (Grade 8-12)\\nprint("=== 🇿🇦 CALCUBOSS PYTHON CALCULATOR ===")\\n\\nwhile True:\\n    try:\\n        num1 = float(input("First number (or 'q' to quit): "))\\n        op = input("Operation (+, -, *, /): ")\\n        num2 = float(input("Second number: "))\\n\\n        if op == "+":\\n            result = num1 + num2\\n        elif op == "-":\\n            result = num1 - num2\\n        elif op == "*":\\n            result = num1 * num2\\n        elif op == "/":\\n            if num2 == 0:\\n                print("⚠️ Error: Cannot divide by zero! Check 4-space indent!")\\n                continue\\n            result = num1 / num2\\n        else:\\n            print("Invalid operator! Use + - * /")\\n            continue\\n\\n        print(f"Result: {num1} {op} {num2} = {result} ✅")\\n    \\n    except ValueError:\\n        print("⚠️ Input error: Type numbers only! Verify int() vs float() vs str()")\\n        print("**3 Steps to Debug:** 1. Check line number 2. Verify int()/float() 3. Check 4-space indent!")\\n        break`;
+                    navigator.clipboard.writeText(code);
+                    setCopiedPyCode(true);
+                    setTimeout(() => setCopiedPyCode(false), 2000);
+                  }}
+                  className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold transition flex items-center gap-1.5 border border-slate-700"
+                  title="Copy Python Code"
+                >
+                  {copiedPyCode ? <CheckCircle className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                  <span>{copiedPyCode ? 'Copied!' : 'Copy Code'}</span>
+                </button>
+
+                <a
+                  href="/calcuboss_calculator.py"
+                  download="calcuboss_calculator.py"
+                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 text-xs font-black transition flex items-center gap-1.5 shadow-lg shadow-amber-500/20 active:scale-95"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Download .py</span>
+                </a>
+              </div>
+            </div>
+
+            <p className="text-xs text-white/80 leading-relaxed">
+              Grade 8-12 Python Calculator with <strong>continuous <code className="text-amber-300 font-mono">while True</code> loop</strong>, <strong>Line 17 zero-division guard</strong>, and Demki's <strong>3-Step Debugger protocol</strong>. Perfect for testing the yellow <span className="text-amber-300 font-bold">📎 file upload</span> in Demki chat!
+            </p>
+
+            <div className="bg-black/60 rounded-xl p-3 border border-white/10 font-mono text-[11px] text-slate-300 max-h-36 overflow-y-auto space-y-1">
+              <div className="text-amber-400/90 font-bold"># Line 17 Zero Division Guard Highlight:</div>
+              <div className="text-slate-400">elif op == "/":</div>
+              <div className="text-amber-300 bg-amber-500/10 px-1 py-0.5 rounded">    if num2 == 0:</div>
+              <div className="text-amber-300 bg-amber-500/10 px-1 py-0.5 rounded">        print("⚠️ Error: Cannot divide by zero! Check 4-space indent!")</div>
+              <div className="text-amber-300 bg-amber-500/10 px-1 py-0.5 rounded">        continue</div>
+              <div className="text-slate-400">    result = num1 / num2</div>
+            </div>
+
+            <div className="text-[11px] text-purple-300 flex items-center gap-1.5 bg-purple-500/10 border border-purple-500/20 px-3 py-2 rounded-xl">
+              <span>💡 <strong>Quick Test:</strong> Download this file, head to Demki's Homework Room, upload it via the yellow 📎, and ask: <em>"Explain line 17, why check zero?"</em></span>
             </div>
           </div>
 

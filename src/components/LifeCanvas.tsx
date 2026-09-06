@@ -13,20 +13,39 @@ import {
   Star,
   Zap,
   Flame,
-  Award
+  Award,
+  Link2,
+  ExternalLink
 } from 'lucide-react';
+
+// Pre-generated High-Fidelity Fantasy RPG Artwork
+import angelStage1Default from '../assets/images/angel_starter_kitten_1788601525377.jpg';
+import angelStage2Default from '../assets/images/angel_warrior_chibi_1788601497365.jpg';
+import angelStage3Default from '../assets/images/angel_champion_feline_1788601512884.jpg';
 
 // Custom synthesized audio sounds
 type SoundType = 'chime' | 'wrench' | 'laser' | 'coin' | 'levelUp' | 'splat';
 
 export const LifeCanvas: React.FC<{ isVoiceEnabled?: boolean }> = ({ isVoiceEnabled = true }) => {
-  const [currentCanvas, setCurrentCanvas] = useState<'avatar' | 'garage' | 'flight' | 'sweet'>('avatar');
+  const [currentCanvas, setCurrentCanvas] = useState<'angel' | 'avatar' | 'garage' | 'flight' | 'sweet'>('angel');
   const [coins, setCoins] = useState<number>(180);
   const [level, setLevel] = useState<number>(3);
   const [xp, setXp] = useState<number>(40);
   const [isShopOpen, setIsShopOpen] = useState<boolean>(false);
 
   // Custom modification states for High-Fidelity Flipbook
+  // Angel the Cat features (2026 Founder Mode upgrade)
+  const [angelStage, setAngelStage] = useState<1 | 2 | 3>(3);
+  const [angelStages, setAngelStages] = useState<Record<1 | 2 | 3, string>>({
+    1: angelStage1Default,
+    2: angelStage2Default,
+    3: angelStage3Default,
+  });
+  const [showUrlConfig, setShowUrlConfig] = useState<boolean>(false);
+  const [angelMaterial, setAngelMaterial] = useState<'fur' | 'glass' | 'galaxy'>('fur');
+  const [angelPaint, setAngelPaint] = useState<'none' | 'stars' | 'neon'>('none');
+  const [angelAccessory, setAngelAccessory] = useState<'none' | 'wings' | 'tiara' | 'collar'>('none');
+
   const [princessStyle, setPrincessStyle] = useState<'plain' | 'crown' | 'shorthair'>('plain');
   const [lamboStyle, setLamboStyle] = useState<'clean' | 'stripes'>('clean');
   const [bakeryStyle, setBakeryStyle] = useState<'plain' | 'topped'>('plain');
@@ -287,7 +306,20 @@ export const LifeCanvas: React.FC<{ isVoiceEnabled?: boolean }> = ({ isVoiceEnab
       </div>
 
       {/* --- CANVAS SELECTOR TABS --- */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 relative z-10">
+      <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 relative z-10">
+        {/* Angel the Cat - 2026 Founder UI */}
+        <button
+          onClick={() => { setCurrentCanvas('angel'); playSoundEffect('chime'); }}
+          className={`py-3.5 px-2.5 rounded-2xl font-black text-xs sm:text-sm transition flex flex-col sm:flex-row items-center justify-center gap-2 border ${
+            currentCanvas === 'angel'
+              ? 'bg-gradient-to-r from-purple-500/80 to-fuchsia-600/80 border-purple-400 text-white shadow-[0_0_20px_rgba(168,85,247,0.4)]'
+              : 'bg-white/[0.04] backdrop-blur-md border-white/10 text-slate-400 hover:text-white hover:bg-white/[0.08]'
+          }`}
+        >
+          <Sparkles className="w-4 h-4 text-purple-300" />
+          <span>🐱 Angel (2026)</span>
+        </button>
+
         <button
           onClick={() => { setCurrentCanvas('avatar'); playSoundEffect('chime'); }}
           className={`py-3.5 px-2.5 rounded-2xl font-black text-xs sm:text-sm transition flex flex-col sm:flex-row items-center justify-center gap-2 border ${
@@ -340,6 +372,164 @@ export const LifeCanvas: React.FC<{ isVoiceEnabled?: boolean }> = ({ isVoiceEnab
       {/* --- THE MAIN LIFE CANVAS BOARD --- */}
       <div className="bg-slate-950 rounded-3xl overflow-hidden relative border-4 border-slate-800 h-[360px] flex items-center justify-center shadow-inner relative z-10">
         
+        {/* Render Page: Angel the Cat (2026 Founder Mode) */}
+        {currentCanvas === 'angel' && (
+          <div className="w-full h-full relative flex items-center justify-center animate-in fade-in duration-300">
+            {/* Ambient Animated Cosmic Background with Stage-Specific Color Themes */}
+            <div className="absolute inset-0 bg-[#0f172a] aurora-bg"></div>
+            {angelStage === 1 && (
+              <div className="absolute inset-0 bg-gradient-to-t from-amber-950/40 via-transparent to-transparent pointer-events-none z-0"></div>
+            )}
+            {angelStage === 2 && (
+              <div className="absolute inset-0 bg-gradient-to-t from-emerald-950/50 via-teal-950/20 to-transparent pointer-events-none z-0"></div>
+            )}
+            {angelStage === 3 && (
+              <div className="absolute inset-0 bg-gradient-to-t from-blue-950/60 via-purple-950/30 to-transparent pointer-events-none z-0"></div>
+            )}
+
+            {/* THREE PRIMARY SELECTION BUTTONS: STAGE 1, STAGE 2, STAGE 3 */}
+            <div className="absolute top-3 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1.5 p-1 bg-black/70 backdrop-blur-xl border border-white/15 rounded-2xl shadow-2xl">
+              <button
+                id="selectStage1Btn"
+                onClick={() => {
+                  setAngelStage(1);
+                  handleModifyAction('levelUp');
+                }}
+                className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all duration-300 flex items-center gap-1.5 ${
+                  angelStage === 1
+                    ? 'bg-gradient-to-r from-amber-500 to-yellow-400 text-slate-950 shadow-[0_0_15px_rgba(245,158,11,0.7)] scale-105'
+                    : 'text-amber-300/80 hover:text-amber-100 hover:bg-white/10'
+                }`}
+                title="Stage 1: Starter Kitten"
+              >
+                <span>🐱</span>
+                <span>Stage 1</span>
+              </button>
+
+              <button
+                id="selectStage2Btn"
+                onClick={() => {
+                  setAngelStage(2);
+                  handleModifyAction('levelUp');
+                }}
+                className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all duration-300 flex items-center gap-1.5 ${
+                  angelStage === 2
+                    ? 'bg-gradient-to-r from-emerald-500 to-teal-400 text-slate-950 shadow-[0_0_15px_rgba(16,185,129,0.7)] scale-105'
+                    : 'text-emerald-300/80 hover:text-emerald-100 hover:bg-white/10'
+                }`}
+                title="Stage 2: Chibi Rogue"
+              >
+                <span>⚔️</span>
+                <span>Stage 2</span>
+              </button>
+
+              <button
+                id="selectStage3Btn"
+                onClick={() => {
+                  setAngelStage(3);
+                  handleModifyAction('levelUp');
+                }}
+                className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all duration-300 flex items-center gap-1.5 ${
+                  angelStage === 3
+                    ? 'bg-gradient-to-r from-cyan-400 to-blue-500 text-slate-950 shadow-[0_0_15px_rgba(59,130,246,0.8)] scale-105'
+                    : 'text-cyan-300/80 hover:text-cyan-100 hover:bg-white/10'
+                }`}
+                title="Stage 3: Divine Champion"
+              >
+                <span>👑</span>
+                <span>Stage 3</span>
+              </button>
+            </div>
+
+            {/* Angel the Cat - Evolutionary Avatar */}
+            <div className="relative z-10 flex flex-col items-center justify-center translate-y-3">
+              <div 
+                id="angelCanvasContainer"
+                className={`relative w-[210px] h-[210px] mx-auto grid place-items-center rounded-[28px] bg-white/[0.08] backdrop-blur-[24px] p-2.5 transition-all duration-500 hover:scale-105 group overflow-hidden ${
+                  angelStage === 1 
+                    ? 'border-2 border-amber-400/80 ring-4 ring-amber-400/30 shadow-[0_0_35px_rgba(245,158,11,0.4)]' 
+                    : angelStage === 2 
+                    ? 'border-2 border-emerald-400/90 ring-4 ring-emerald-400/40 shadow-[0_0_40px_rgba(16,185,129,0.5)]' 
+                    : 'border-2 border-cyan-400/90 ring-4 ring-blue-500/50 shadow-[0_0_50px_rgba(59,130,246,0.6)]'
+                }`}
+              >
+                {/* Dynamic Stage Background Overlays */}
+                {angelStage === 1 && (
+                  <div className="absolute inset-0 bg-gradient-to-br from-amber-500/20 to-yellow-900/40 mix-blend-overlay z-0 pointer-events-none rounded-[28px]">
+                    <div className="absolute top-2 right-2 text-xs opacity-60 animate-pulse">✨</div>
+                  </div>
+                )}
+                {angelStage === 2 && (
+                  <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/25 to-teal-900/50 mix-blend-overlay z-0 pointer-events-none rounded-[28px]">
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_30%,rgba(52,211,153,0.2),transparent_70%)]"></div>
+                  </div>
+                )}
+                {angelStage === 3 && (
+                  <div className="absolute inset-0 bg-gradient-to-br from-blue-600/35 via-indigo-500/25 to-purple-900/50 mix-blend-overlay z-0 pointer-events-none rounded-[28px]">
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(96,165,250,0.25),transparent_70%)] animate-pulse"></div>
+                  </div>
+                )}
+
+                {/* THE LIVE STAGE AVATAR IMAGE */}
+                <img
+                  id="angelCanvasDisplay"
+                  src={angelStages[angelStage]}
+                  alt={`Angel the Cat Stage ${angelStage}`}
+                  referrerPolicy="no-referrer"
+                  className={`
+                    w-full h-full object-cover rounded-[20px] transition-all duration-500 z-10 relative
+                    ${angelMaterial === 'fur' ? 'drop-shadow-[0_12px_24px_rgba(0,0,0,0.6)]' : ''}
+                    ${angelMaterial === 'glass' ? 'opacity-85 backdrop-blur-sm brightness-110 saturate-150 drop-shadow-[0_0_30px_rgba(120,200,255,0.7)] contrast-110' : ''}
+                    ${angelMaterial === 'galaxy' ? 'drop-shadow-[0_0_30px_rgba(168,85,247,0.9)] animate-pulse hue-rotate-15' : ''}
+                  `}
+                />
+                
+                {/* Accessory Overlays */}
+                {angelAccessory === 'wings' && (
+                  <span className="absolute -top-6 -left-10 text-[70px] -z-10 animate-pulse drop-shadow-xl pointer-events-none">👼</span>
+                )}
+                {angelAccessory === 'tiara' && (
+                  <span className="absolute -top-10 left-1/2 -translate-x-1/2 text-[55px] z-30 drop-shadow-xl pointer-events-none">👑</span>
+                )}
+                {angelAccessory === 'collar' && (
+                  <span className="absolute bottom-1 left-1/2 -translate-x-1/2 text-[45px] z-30 drop-shadow-xl pointer-events-none">💎</span>
+                )}
+
+                {/* Face Paint/Glow Overlays */}
+                {angelPaint === 'stars' && (
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/3 pointer-events-none text-2xl z-30 opacity-90 drop-shadow-[0_0_10px_#fff]">✨ ✨</div>
+                )}
+                {angelPaint === 'neon' && (
+                  <div className="absolute inset-0 bg-gradient-to-tr from-fuchsia-500 to-cyan-500 mix-blend-color opacity-40 rounded-[28px] pointer-events-none z-20"></div>
+                )}
+              </div>
+            </div>
+
+            {/* Canvas Badge with Dynamic Active Stage Theme */}
+            <div className={`absolute bottom-4 left-4 bg-black/70 backdrop-blur-md px-3.5 py-1.5 rounded-xl border text-xs font-black z-20 shadow-lg flex items-center gap-2 ${
+              angelStage === 1 ? 'border-amber-400/50 text-amber-300' :
+              angelStage === 2 ? 'border-emerald-400/50 text-emerald-300' :
+              'border-cyan-400/50 text-cyan-300'
+            }`}>
+              <span>
+                {angelStage === 1 && '🐱 Stage 1: Starter Kitten • Golden Shimmer'}
+                {angelStage === 2 && '⚔️ Stage 2: Chibi Forest Warrior • Emerald Forest'}
+                {angelStage === 3 && '👑 Stage 3: Divine Champion Princess • Sapphire Glow'}
+              </span>
+            </div>
+
+            {/* Custom URL Drawer Button */}
+            <button
+              onClick={() => setShowUrlConfig(!showUrlConfig)}
+              className="absolute top-4 right-4 bg-black/60 hover:bg-black/80 backdrop-blur-md px-2.5 py-1.5 rounded-xl border border-white/10 text-[10px] font-bold text-white/70 hover:text-white flex items-center gap-1.5 z-20 transition"
+              title="Custom Artwork URLs"
+            >
+              <Link2 className="w-3 h-3 text-purple-400" />
+              <span>Image Links</span>
+            </button>
+          </div>
+        )}
+
         {/* Render Page A: Princess Walk */}
         {currentCanvas === 'avatar' && (
           <div className="w-full h-full relative flex items-center justify-center animate-in fade-in duration-300">
@@ -505,6 +695,237 @@ export const LifeCanvas: React.FC<{ isVoiceEnabled?: boolean }> = ({ isVoiceEnab
         </p>
 
         {/* Dynamic Piece Trays based on Active Tab Canvas */}
+        
+        {/* Angel the Cat Controls (2026 Founder Mode) */}
+        {currentCanvas === 'angel' && (
+          <div className="space-y-4 animate-in fade-in duration-200">
+            {/* Holographic Fragment Showcase (Evolution Tiers) */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] text-purple-300 font-bold uppercase tracking-wider">Evolution Tiers</span>
+                <span className="text-[9px] bg-purple-500/20 text-purple-200 px-1.5 py-0.5 rounded border border-purple-500/30">Holographic Fragment Showcase</span>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  id="angelStage1Btn"
+                  onClick={() => {
+                    setAngelStage(1);
+                    handleModifyAction('levelUp');
+                  }}
+                  className={`p-2.5 rounded-2xl text-xs font-bold border transition-all duration-300 flex flex-col items-center justify-center gap-1.5 overflow-hidden relative ${
+                    angelStage === 1 
+                      ? 'bg-amber-500/20 border-amber-400 text-amber-200 shadow-[0_0_20px_rgba(245,158,11,0.4)] ring-2 ring-amber-400/50 scale-[1.02]' 
+                      : 'bg-slate-900/80 border-white/10 text-slate-400 hover:text-white hover:bg-slate-800'
+                  }`}
+                >
+                  <div className="w-8 h-8 rounded-xl bg-slate-950/80 border border-amber-500/30 flex items-center justify-center text-lg shadow-inner">🐱</div>
+                  <span>Stage 1</span>
+                  <div className="text-[8px] opacity-75 font-normal">Starter Kitten</div>
+                  {angelStage === 1 && <div className="absolute inset-0 bg-amber-500/10 animate-pulse pointer-events-none"></div>}
+                </button>
+
+                <button
+                  id="angelStage2Btn"
+                  onClick={() => {
+                    setAngelStage(2);
+                    handleModifyAction('levelUp');
+                  }}
+                  className={`p-2.5 rounded-2xl text-xs font-bold border transition-all duration-300 flex flex-col items-center justify-center gap-1.5 overflow-hidden relative ${
+                    angelStage === 2 
+                      ? 'bg-emerald-500/25 border-emerald-400 text-emerald-200 shadow-[0_0_25px_rgba(16,185,129,0.5)] ring-2 ring-emerald-400/50 scale-[1.02]' 
+                      : 'bg-slate-900/80 border-white/10 text-slate-400 hover:text-white hover:bg-slate-800'
+                  }`}
+                >
+                  <div className="w-8 h-8 rounded-xl bg-slate-950/80 border border-emerald-500/30 flex items-center justify-center text-lg shadow-inner">⚔️</div>
+                  <span>Stage 2</span>
+                  <div className="text-[8px] opacity-75 font-normal">Chibi Rogue</div>
+                  {angelStage === 2 && <div className="absolute inset-0 bg-emerald-500/15 animate-pulse pointer-events-none"></div>}
+                </button>
+
+                <button
+                  id="angelStage3Btn"
+                  onClick={() => {
+                    setAngelStage(3);
+                    handleModifyAction('levelUp');
+                  }}
+                  className={`p-2.5 rounded-2xl text-xs font-bold border transition-all duration-300 flex flex-col items-center justify-center gap-1.5 overflow-hidden relative ${
+                    angelStage === 3 
+                      ? 'bg-blue-500/25 border-cyan-400 text-cyan-200 shadow-[0_0_30px_rgba(59,130,246,0.6)] ring-2 ring-cyan-400/50 scale-[1.02]' 
+                      : 'bg-slate-900/80 border-white/10 text-slate-400 hover:text-white hover:bg-slate-800'
+                  }`}
+                >
+                  <div className="w-8 h-8 rounded-xl bg-slate-950/80 border border-cyan-500/30 flex items-center justify-center text-lg shadow-inner">👑</div>
+                  <span>Stage 3</span>
+                  <div className="text-[8px] opacity-75 font-normal">Divine Hero</div>
+                  {angelStage === 3 && <div className="absolute inset-0 bg-cyan-500/15 animate-pulse pointer-events-none"></div>}
+                </button>
+              </div>
+            </div>
+
+            {/* Custom Image Links Config Panel */}
+            {showUrlConfig && (
+              <div className="p-3 bg-white/[0.04] backdrop-blur-md rounded-2xl border border-white/15 space-y-2.5 animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold text-purple-300 uppercase tracking-wider flex items-center gap-1">
+                    <Link2 className="w-3 h-3" /> Custom Image URLs (e.g., ibb.co)
+                  </span>
+                  <button
+                    onClick={() => {
+                      setAngelStages({
+                        1: angelStage1Default,
+                        2: angelStage2Default,
+                        3: angelStage3Default,
+                      });
+                      handleModifyAction('chime');
+                    }}
+                    className="text-[9px] text-slate-400 hover:text-amber-300 underline"
+                  >
+                    Reset Defaults
+                  </button>
+                </div>
+
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-bold text-amber-300 w-14">Stage 1:</span>
+                    <input
+                      type="text"
+                      value={angelStages[1]}
+                      onChange={(e) => setAngelStages((prev) => ({ ...prev, 1: e.target.value }))}
+                      placeholder="Paste Stage 1 Image URL..."
+                      className="flex-1 text-[10px] bg-black/50 border border-white/10 rounded-lg px-2 py-1 text-white placeholder:text-white/30 focus:outline-none focus:border-amber-400"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-bold text-emerald-300 w-14">Stage 2:</span>
+                    <input
+                      type="text"
+                      value={angelStages[2]}
+                      onChange={(e) => setAngelStages((prev) => ({ ...prev, 2: e.target.value }))}
+                      placeholder="Paste Stage 2 Image URL..."
+                      className="flex-1 text-[10px] bg-black/50 border border-white/10 rounded-lg px-2 py-1 text-white placeholder:text-white/30 focus:outline-none focus:border-emerald-400"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-bold text-cyan-300 w-14">Stage 3:</span>
+                    <input
+                      type="text"
+                      value={angelStages[3]}
+                      onChange={(e) => setAngelStages((prev) => ({ ...prev, 3: e.target.value }))}
+                      placeholder="Paste Stage 3 Image URL..."
+                      className="flex-1 text-[10px] bg-black/50 border border-white/10 rounded-lg px-2 py-1 text-white placeholder:text-white/30 focus:outline-none focus:border-cyan-400"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Live Material Toggle */}
+            <div className="space-y-1.5">
+              <span className="text-[11px] text-white/60 font-bold block">Live Material:</span>
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  onClick={() => { setAngelMaterial('fur'); handleModifyAction('chime'); }}
+                  className={`p-2 rounded-xl text-xs font-bold border transition flex items-center justify-center gap-1.5 ${
+                    angelMaterial === 'fur' ? 'bg-[#ffb400]/20 border-[#ffb400]/50 text-white shadow-[0_0_10px_rgba(255,180,0,0.2)]' : 'bg-white/[0.04] border-white/10 text-white/40 hover:text-white hover:bg-white/[0.08]'
+                  }`}
+                >
+                  <span>🧶 Classic Fur</span>
+                </button>
+                <button
+                  onClick={() => { setAngelMaterial('glass'); handleModifyAction('chime'); }}
+                  className={`p-2 rounded-xl text-xs font-bold border transition flex items-center justify-center gap-1.5 ${
+                    angelMaterial === 'glass' ? 'bg-cyan-500/20 border-cyan-500/50 text-white shadow-[0_0_10px_rgba(6,182,212,0.2)]' : 'bg-white/[0.04] border-white/10 text-white/40 hover:text-white hover:bg-white/[0.08]'
+                  }`}
+                >
+                  <span>🧊 Shiny Glass</span>
+                </button>
+                <button
+                  onClick={() => { setAngelMaterial('galaxy'); handleModifyAction('chime'); }}
+                  className={`p-2 rounded-xl text-xs font-bold border transition flex items-center justify-center gap-1.5 ${
+                    angelMaterial === 'galaxy' ? 'bg-purple-500/20 border-purple-500/50 text-white shadow-[0_0_10px_rgba(168,85,247,0.2)]' : 'bg-white/[0.04] border-white/10 text-white/40 hover:text-white hover:bg-white/[0.08]'
+                  }`}
+                >
+                  <span>🌌 Galaxy Glow</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Face Paint & Glitter */}
+            <div className="space-y-1.5">
+              <span className="text-[11px] text-white/60 font-bold block">Face Paint & Glitter:</span>
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  onClick={() => { setAngelPaint('none'); handleModifyAction('splat'); }}
+                  className={`p-2 rounded-xl text-xs font-bold border transition flex items-center justify-center gap-1.5 ${
+                    angelPaint === 'none' ? 'bg-white/[0.1] border-white/30 text-white' : 'bg-white/[0.04] border-white/10 text-white/40 hover:text-white hover:bg-white/[0.08]'
+                  }`}
+                >
+                  <span>🧼 Clean</span>
+                </button>
+                <button
+                  onClick={() => { setAngelPaint('stars'); handleModifyAction('chime'); }}
+                  className={`p-2 rounded-xl text-xs font-bold border transition flex items-center justify-center gap-1.5 ${
+                    angelPaint === 'stars' ? 'bg-amber-500/20 border-amber-500/50 text-white' : 'bg-white/[0.04] border-white/10 text-white/40 hover:text-white hover:bg-white/[0.08]'
+                  }`}
+                >
+                  <span>✨ Starry Eyes</span>
+                </button>
+                <button
+                  onClick={() => { setAngelPaint('neon'); handleModifyAction('laser'); }}
+                  className={`p-2 rounded-xl text-xs font-bold border transition flex items-center justify-center gap-1.5 ${
+                    angelPaint === 'neon' ? 'bg-fuchsia-500/20 border-fuchsia-500/50 text-white' : 'bg-white/[0.04] border-white/10 text-white/40 hover:text-white hover:bg-white/[0.08]'
+                  }`}
+                >
+                  <span>🌟 Neon Paint</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Accessories */}
+            <div className="space-y-1.5">
+              <span className="text-[11px] text-white/60 font-bold block">Accessories:</span>
+              <div className="grid grid-cols-4 gap-2">
+                <button
+                  onClick={() => { setAngelAccessory('none'); handleModifyAction('wrench'); }}
+                  className={`p-2 rounded-xl text-xs font-bold border transition flex flex-col items-center justify-center gap-1 ${
+                    angelAccessory === 'none' ? 'bg-white/[0.1] border-white/30 text-white' : 'bg-white/[0.04] border-white/10 text-white/40 hover:text-white hover:bg-white/[0.08]'
+                  }`}
+                >
+                  <span className="text-sm">❌</span>
+                  <span>None</span>
+                </button>
+                <button
+                  onClick={() => { setAngelAccessory('wings'); handleModifyAction('coin'); }}
+                  className={`p-2 rounded-xl text-xs font-bold border transition flex flex-col items-center justify-center gap-1 ${
+                    angelAccessory === 'wings' ? 'bg-cyan-500/20 border-cyan-500/50 text-white' : 'bg-white/[0.04] border-white/10 text-white/40 hover:text-white hover:bg-white/[0.08]'
+                  }`}
+                >
+                  <span className="text-sm">👼</span>
+                  <span>Wings</span>
+                </button>
+                <button
+                  onClick={() => { setAngelAccessory('tiara'); handleModifyAction('coin'); }}
+                  className={`p-2 rounded-xl text-xs font-bold border transition flex flex-col items-center justify-center gap-1 ${
+                    angelAccessory === 'tiara' ? 'bg-purple-500/20 border-purple-500/50 text-white' : 'bg-white/[0.04] border-white/10 text-white/40 hover:text-white hover:bg-white/[0.08]'
+                  }`}
+                >
+                  <span className="text-sm">👑</span>
+                  <span>Tiara</span>
+                </button>
+                <button
+                  onClick={() => { setAngelAccessory('collar'); handleModifyAction('coin'); }}
+                  className={`p-2 rounded-xl text-xs font-bold border transition flex flex-col items-center justify-center gap-1 ${
+                    angelAccessory === 'collar' ? 'bg-pink-500/20 border-pink-500/50 text-white' : 'bg-white/[0.04] border-white/10 text-white/40 hover:text-white hover:bg-white/[0.08]'
+                  }`}
+                >
+                  <span className="text-sm">💎</span>
+                  <span>Collar</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {currentCanvas === 'avatar' && (
           <div className="space-y-3 animate-in fade-in duration-200">
             {/* Row 1: Hair Accessories */}

@@ -381,7 +381,13 @@ export const HomeworkRoom: React.FC<HomeworkRoomProps> = ({
   };
 
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl flex flex-col w-full text-slate-100">
+    <div className="relative flex flex-col w-full h-full min-h-[500px] rounded-[28px] bg-white/[0.08] backdrop-blur-[24px] border border-white/15 shadow-[0_8px_32px_rgba(0,0,0,0.25)] overflow-hidden aurora-bg text-slate-100">
+      {/* Aurora blobs behind */}
+      <div className="pointer-events-none absolute -top-24 -left-24 w-96 h-96 bg-purple-500/30 blur-[80px] rounded-full z-0" />
+      <div className="pointer-events-none absolute -bottom-24 -right-24 w-96 h-96 bg-cyan-400/30 blur-[80px] rounded-full z-0" />
+      
+      {/* Content wrapper to ensure it sits above the blobs */}
+      <div className="relative z-10 flex flex-col h-full">
       
       {['calcuboss', 'treebo', 'msnova'].includes(teacher.id) && (
         <div className="p-4 bg-slate-950 border-b border-slate-800">
@@ -627,6 +633,14 @@ export const HomeworkRoom: React.FC<HomeworkRoomProps> = ({
               </>
             ) : teacher.id === 'demki' ? (
               <>
+                <a
+                  href="/calcuboss_calculator.py"
+                  download="calcuboss_calculator.py"
+                  className="px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 whitespace-nowrap transition flex items-center gap-1 font-bold"
+                  title="Download Demki's Final Python Calculator"
+                >
+                  <span>📥 calcuboss_calculator.py</span>
+                </a>
                 {DEMKI_PRESETS.filter(p => p.id !== 'welcome').map((preset) => (
                   <button
                     key={preset.id}
@@ -912,7 +926,7 @@ export const HomeworkRoom: React.FC<HomeworkRoomProps> = ({
         }}
         disabled={isSending}
       />
-
+      </div>
     </div>
   );
 };
