@@ -14,7 +14,11 @@ import {
   Users, 
   ShieldCheck, 
   Settings,
-  Zap
+  Zap,
+  Monitor,
+  Smartphone,
+  Keyboard,
+  Laptop
 } from 'lucide-react';
 import { PuzzleGame } from './PuzzleGame';
 import { ParentCommunity } from './ParentCommunity';
@@ -54,6 +58,7 @@ export interface UserProfile {
   grade: string;
   level: GradeLevel;
   role: UserRole;
+  isAcceleratedMode?: boolean;
 }
 
 export const FusedCalcubossApp: React.FC = () => {
@@ -83,6 +88,7 @@ export const FusedCalcubossApp: React.FC = () => {
   const [inputAge, setInputAge] = useState(profile.age);
   const [inputGrade, setInputGrade] = useState(profile.grade);
   const [inputRole, setInputRole] = useState<UserRole>(profile.role);
+  const [inputAccelerated, setInputAccelerated] = useState<boolean>(profile.isAcceleratedMode || false);
 
   const [activeTab, setActiveTab] = useState<'chat' | 'profit' | 'community' | 'puzzles' | 'vault' | 'canvas'>('chat');
   const [selectedTeacher, setSelectedTeacher] = useState<TeacherItem>(TEACHERS[0]);
@@ -149,6 +155,75 @@ export const FusedCalcubossApp: React.FC = () => {
     setTimeout(() => setToastMsg(null), 3000);
   };
 
+  // PC / Desktop Widescreen Layout Preference & State
+  const [isPcWide, setIsPcWide] = useState<boolean>(() => {
+    const saved = localStorage.getItem('calcuboss_pc_layout');
+    if (saved) return saved === 'wide';
+    return typeof window !== 'undefined' && window.innerWidth >= 1024;
+  });
+
+  const [showHotkeysModal, setShowHotkeysModal] = useState<boolean>(false);
+
+  const togglePcLayout = () => {
+    setIsPcWide(prev => {
+      const next = !prev;
+      localStorage.setItem('calcuboss_pc_layout', next ? 'wide' : 'compact');
+      showToast(next ? "🖥️ Switched to PC Widescreen Mode" : "📱 Switched to Compact Mobile Frame");
+      return next;
+    });
+  };
+
+  // Global PC Keyboard Shortcuts Listener
+  useEffect(() => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      // Don't intercept when user is typing in form fields
+      if (['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement)?.tagName)) {
+        if (e.key === 'Escape') {
+          (e.target as HTMLElement).blur();
+        }
+        return;
+      }
+
+      if (e.key === 'Escape') {
+        setShowProfileSetup(false);
+        setShowFounderPinModal(false);
+        setShowVipModal(false);
+        setShowLocalAiConfig(false);
+        setShowHotkeysModal(false);
+        setShareModalText(null);
+      } else if (e.altKey && e.key === '1') {
+        e.preventDefault();
+        setActiveTab('chat');
+        showToast("💬 Homework Room (Alt+1)");
+      } else if (e.altKey && e.key === '2') {
+        e.preventDefault();
+        setActiveTab('canvas');
+        showToast("🎨 OS6 Life Canvas (Alt+2)");
+      } else if (e.altKey && e.key === '3') {
+        e.preventDefault();
+        setActiveTab('puzzles');
+        showToast("🧩 3D Puzzles (Alt+3)");
+      } else if (e.altKey && e.key === '4') {
+        e.preventDefault();
+        setActiveTab('vault');
+        showToast("📦 Creator Vault (Alt+4)");
+      } else if (e.altKey && e.key === '5') {
+        e.preventDefault();
+        setActiveTab('profit');
+        showToast("📊 Dashboard (Alt+5)");
+      } else if (e.altKey && e.key === '6') {
+        e.preventDefault();
+        setActiveTab('community');
+        showToast("👥 Community Feed (Alt+6)");
+      } else if (e.key === '?' || (e.shiftKey && e.key === '/')) {
+        setShowHotkeysModal(prev => !prev);
+      }
+    };
+
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    return () => window.removeEventListener('keydown', handleGlobalKeyDown);
+  }, []);
+
   const handleSaveProfile = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     const ageNum = Number(inputAge);
@@ -161,19 +236,21 @@ export const FusedCalcubossApp: React.FC = () => {
       age: ageNum,
       grade: inputGrade,
       level,
-      role: inputRole
+      role: inputRole,
+      isAcceleratedMode: inputAccelerated
     };
 
     setProfile(updated);
     localStorage.setItem('calcuboss_user_profile', JSON.stringify(updated));
     localStorage.setItem('calcuboss_user_email', cleanEmail);
+    localStorage.setItem('calcuboss_accelerated_mode', inputAccelerated ? 'true' : 'false');
 
     if (VIP_ACCOUNTS.includes(cleanEmail)) {
       setIsVip(true);
     }
 
     setShowProfileSetup(false);
-    showToast(`✅ Profile Saved! Role: ${updated.role === 'parent' ? 'Parent/Educator 👨‍👩‍👧' : 'Student/Child 👦'} (${updated.grade})`);
+    showToast(`✅ Profile Saved! ${inputAccelerated ? '⚡ Accelerated Mode ON' : ''} (${updated.grade})`);
   };
 
   const toggleUserRole = () => {
@@ -244,6 +321,7 @@ export const FusedCalcubossApp: React.FC = () => {
   };
 
   const displayedTeachers = showAllTeachers ? TEACHERS : TEACHERS.slice(0, 4);
+  const containerClass = isPcWide ? "w-full max-w-5xl xl:max-w-6xl mx-auto transition-all duration-300" : "w-full max-w-2xl mx-auto transition-all duration-300";
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between font-sans antialiased p-2 sm:p-4 relative overflow-x-hidden">
@@ -254,7 +332,7 @@ export const FusedCalcubossApp: React.FC = () => {
       </div>
       
       {/* TOP HEADER MATCHING VIDEO - 2026 GLASSMORPHISM */}
-      <header className="w-full max-w-2xl mx-auto flex items-center justify-between p-3 bg-white/[0.04] backdrop-blur-[24px] border border-white/10 rounded-full shadow-[0_8px_32px_rgba(0,0,0,0.25)] relative z-10">
+      <header className={`${containerClass} flex items-center justify-between p-3 bg-white/[0.04] backdrop-blur-[24px] border border-white/10 rounded-full shadow-[0_8px_32px_rgba(0,0,0,0.25)] relative z-10`}>
         <div className="flex items-center gap-3 pl-1">
           <div>
             <h1 className="text-lg font-black text-white tracking-tight flex items-center gap-1.5 drop-shadow-md">
@@ -277,6 +355,34 @@ export const FusedCalcubossApp: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2 pr-1">
+          {/* PC Mode Indicator & Toggle */}
+          <button
+            onClick={togglePcLayout}
+            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold border transition backdrop-blur-md bg-white/[0.08] border-white/15 text-white/90 hover:bg-white/15 active:scale-95 shadow-sm"
+            title={isPcWide ? "Switch to Phone Frame View" : "Switch to PC Widescreen Mode"}
+          >
+            {isPcWide ? (
+              <>
+                <Monitor className="w-3.5 h-3.5 text-cyan-400" />
+                <span className="text-cyan-300 font-semibold">PC Widescreen</span>
+              </>
+            ) : (
+              <>
+                <Smartphone className="w-3.5 h-3.5 text-purple-400" />
+                <span className="text-purple-300 font-semibold">Compact</span>
+              </>
+            )}
+          </button>
+
+          {/* PC Shortcuts Guide Button */}
+          <button
+            onClick={() => setShowHotkeysModal(true)}
+            className="hidden md:flex w-10 h-10 rounded-full bg-white/[0.08] border border-white/10 text-white/80 hover:text-white hover:bg-white/15 transition items-center justify-center backdrop-blur-md shadow-sm"
+            title="PC Keyboard Shortcuts (?)"
+          >
+            <Keyboard className="w-4 h-4 text-indigo-300" />
+          </button>
+
           {/* SA Flag Icon simulated */}
           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-500 via-yellow-400 to-blue-600 border border-white/20 flex items-center justify-center text-[10px] shadow-inner overflow-hidden">
              🇿🇦
@@ -304,7 +410,7 @@ export const FusedCalcubossApp: React.FC = () => {
       </header>
 
       {/* QUICK PROFILE & VIP CARDS ROW (MATCHING VIDEO AT 00:01 - 00:03) */}
-      <div className="w-full max-w-2xl mx-auto grid grid-cols-2 gap-2 my-2 relative z-10">
+      <div className={`${containerClass} grid ${isPcWide ? 'grid-cols-2 lg:grid-cols-4' : 'grid-cols-2'} gap-2.5 my-2 relative z-10`}>
         {/* Student Mode Card - 2026 Glassmorphism */}
         <div 
           onClick={toggleUserRole}
@@ -388,7 +494,7 @@ export const FusedCalcubossApp: React.FC = () => {
       </div>
 
       {/* SCHOOL KIDS AI TEACHER SQUAD SECTION (MATCHING VIDEO) */}
-      <div className="max-w-2xl mx-auto w-full my-2 relative z-10">
+      <div className={`${containerClass} my-2 relative z-10`}>
         <div className="flex justify-between items-center text-xs mb-3 px-2">
           <div className="flex items-center gap-2">
             <span className="font-extrabold text-white text-sm drop-shadow-md">School Kids AI Teacher Squad</span>
@@ -402,7 +508,7 @@ export const FusedCalcubossApp: React.FC = () => {
         </div>
 
         {/* Teachers Grid/Row */}
-        <div className="grid grid-cols-4 sm:grid-cols-8 gap-3 px-1">
+        <div className={`grid ${isPcWide ? 'grid-cols-5 sm:grid-cols-9' : 'grid-cols-4 sm:grid-cols-8'} gap-3 px-1`}>
           {displayedTeachers.map((t, idx) => (
             <button
               key={t.id}
@@ -449,7 +555,7 @@ export const FusedCalcubossApp: React.FC = () => {
       </div>
 
       {/* MAIN TAB CONTENT */}
-      <main className="w-full max-w-2xl mx-auto flex-1 flex flex-col my-1">
+      <main className={`${containerClass} flex-1 flex flex-col my-1`}>
         {activeTab === 'chat' && (
           <HomeworkRoom
             teacher={selectedTeacher}
@@ -476,65 +582,77 @@ export const FusedCalcubossApp: React.FC = () => {
       </main>
 
       {/* BOTTOM MOBILE APP NAVIGATION BAR - FOUNDER 2026 GLASS DOCK */}
-      <nav className="max-w-2xl mx-auto w-full mt-3 flex justify-between p-2 mx-2 rounded-full bg-white/[0.06] backdrop-blur-[20px] border border-white/10 text-[10px] shadow-[0_8px_32px_rgba(0,0,0,0.25)] relative z-20">
+      <nav className={`${containerClass} mt-3 flex justify-between p-2 rounded-full bg-white/[0.06] backdrop-blur-[20px] border border-white/10 text-[10px] shadow-[0_8px_32px_rgba(0,0,0,0.25)] relative z-20`}>
         <button
           onClick={() => setActiveTab('chat')}
-          className={`flex flex-col items-center py-2 px-4 rounded-full transition ${
+          className={`flex flex-col items-center py-2 px-3 sm:px-4 rounded-full transition ${
             activeTab === 'chat' ? 'bg-[#ffb400] text-black font-bold shadow-lg' : 'text-white/60 hover:bg-white/10'
           }`}
+          title="Homework Room (Alt+1)"
         >
           <span className="text-base mb-0.5">💬</span>
           <span>Room</span>
+          <span className="hidden sm:inline-block text-[8px] opacity-60 font-mono mt-0.5">Alt+1</span>
         </button>
 
         <button
           onClick={() => setActiveTab('profit')}
-          className={`flex flex-col items-center py-2 px-4 rounded-full transition ${
+          className={`flex flex-col items-center py-2 px-3 sm:px-4 rounded-full transition ${
             activeTab === 'profit' ? 'bg-[#ffb400] text-black font-bold shadow-lg' : 'text-white/60 hover:bg-white/10'
           }`}
+          title="Dashboard & Stats (Alt+5)"
         >
           <span className="text-base mb-0.5">📈</span>
           <span>Stats</span>
+          <span className="hidden sm:inline-block text-[8px] opacity-60 font-mono mt-0.5">Alt+5</span>
         </button>
 
         <button
           onClick={() => setActiveTab('canvas')}
-          className={`flex flex-col items-center py-2 px-4 rounded-full transition ${
+          className={`flex flex-col items-center py-2 px-3 sm:px-4 rounded-full transition ${
             activeTab === 'canvas' ? 'bg-[#ffb400] text-black font-bold shadow-lg' : 'text-white/60 hover:bg-white/10'
           }`}
+          title="OS6 Life Canvas (Alt+2)"
         >
           <span className="text-base mb-0.5">🎨</span>
           <span>Canvas</span>
+          <span className="hidden sm:inline-block text-[8px] opacity-60 font-mono mt-0.5">Alt+2</span>
         </button>
 
         <button
           onClick={() => setActiveTab('puzzles')}
-          className={`flex flex-col items-center py-2 px-4 rounded-full transition ${
+          className={`flex flex-col items-center py-2 px-3 sm:px-4 rounded-full transition ${
             activeTab === 'puzzles' ? 'bg-[#ffb400] text-black font-bold shadow-lg' : 'text-white/60 hover:bg-white/10'
           }`}
+          title="3D Puzzles (Alt+3)"
         >
           <span className="text-base mb-0.5">🧩</span>
           <span>Games</span>
+          <span className="hidden sm:inline-block text-[8px] opacity-60 font-mono mt-0.5">Alt+3</span>
         </button>
 
         <button
           onClick={() => setActiveTab('vault')}
-          className={`flex flex-col items-center py-2 px-4 rounded-full transition ${
+          className={`flex flex-col items-center py-2 px-3 sm:px-4 rounded-full transition ${
             activeTab === 'vault' ? 'bg-[#ffb400] text-black font-bold shadow-lg' : 'text-white/60 hover:bg-white/10'
           }`}
+          title="Creator Vault (Alt+4)"
         >
           <span className="text-base mb-0.5">👑</span>
           <span>Vault</span>
+          <span className="hidden sm:inline-block text-[8px] opacity-60 font-mono mt-0.5">Alt+4</span>
         </button>
 
         <button
           onClick={() => setActiveTab('community')}
-          className={`flex flex-col items-center py-2 px-4 rounded-full transition ${
+          className={`flex flex-col items-center py-2 px-3 sm:px-4 rounded-full transition ${
             activeTab === 'community' ? 'bg-[#ffb400] text-black font-bold shadow-lg' : 'text-white/60 hover:bg-white/10'
           }`}
+          title="Parent Community Feed (Alt+6)"
         >
           <span className="text-base mb-0.5">👥</span>
           <span>Feed</span>
+          <span className="hidden sm:inline-block text-[8px] opacity-60 font-mono mt-0.5">Alt+6</span>
         </button>
       </nav>
 
@@ -672,28 +790,15 @@ export const FusedCalcubossApp: React.FC = () => {
 
               <div className="grid grid-cols-2 gap-2">
                 <div className="space-y-1">
-                  <label className="text-[10px] text-slate-400 font-bold flex items-center justify-between">
-                    <span>Grade Level:</span>
-                  </label>
-                  <select
-                    value={inputGrade}
-                    onChange={(e) => setInputGrade(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white focus:outline-none focus:border-amber-400 font-medium"
-                  >
-                    <option value="Grade R">Grade R (Gemini)</option>
-                    <option value="Grade 1">Grade 1 (Gemini)</option>
-                    <option value="Grade 2">Grade 2 (Gemini)</option>
-                    <option value="Grade 3">Grade 3 (Gemini)</option>
-                    <option value="Grade 4">Grade 4 (Gemini)</option>
-                    <option value="Grade 5">Grade 5 (Gemini)</option>
-                    <option value="Grade 6">Grade 6 (Gemini)</option>
-                    <option value="Grade 7">Grade 7 (CAPS - Gemini)</option>
-                    <option value="Grade 8">Grade 8 (Llama 4 Scout)</option>
-                    <option value="Grade 9">Grade 9 (Llama 4 Scout)</option>
-                    <option value="Grade 10">Grade 10 (Llama 4 Scout)</option>
-                    <option value="Grade 11">Grade 11 (Llama 4 Scout)</option>
-                    <option value="Grade 12">Grade 12 (Matric - Llama 4 Scout)</option>
-                  </select>
+                  <label className="text-[10px] text-slate-400 font-bold">Student Age:</label>
+                  <input
+                    type="number"
+                    min={4}
+                    max={20}
+                    value={inputAge}
+                    onChange={(e) => setInputAge(Number(e.target.value))}
+                    className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white focus:outline-none focus:border-amber-400 font-mono font-bold"
+                  />
                 </div>
 
                 <div className="space-y-1">
@@ -708,6 +813,99 @@ export const FusedCalcubossApp: React.FC = () => {
                   </select>
                 </div>
               </div>
+
+              <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <label className="text-[10px] text-slate-400 font-bold">Grade Level:</label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const recAge = Number(inputAge) || 12;
+                      const recGradeNum = Math.max(0, Math.min(12, recAge - 5));
+                      const recGradeStr = recGradeNum === 0 ? "Grade R" : `Grade ${recGradeNum}`;
+                      setInputGrade(recGradeStr);
+                      showToast(`🤖 Auto-recommended: ${recGradeStr} for Age ${recAge}`);
+                    }}
+                    className="text-[9px] text-amber-400 hover:text-amber-300 font-bold flex items-center gap-1 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20"
+                  >
+                    <span>🤖 Auto-Recommend Grade</span>
+                  </button>
+                </div>
+                <select
+                  value={inputGrade}
+                  onChange={(e) => setInputGrade(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white focus:outline-none focus:border-amber-400 font-medium"
+                >
+                  <option value="Grade R">Grade R (Gemini)</option>
+                  <option value="Grade 1">Grade 1 (Gemini)</option>
+                  <option value="Grade 2">Grade 2 (Gemini)</option>
+                  <option value="Grade 3">Grade 3 (Gemini)</option>
+                  <option value="Grade 4">Grade 4 (Gemini)</option>
+                  <option value="Grade 5">Grade 5 (Gemini)</option>
+                  <option value="Grade 6">Grade 6 (Gemini)</option>
+                  <option value="Grade 7">Grade 7 (CAPS - Gemini)</option>
+                  <option value="Grade 8">Grade 8 (Llama 4 Scout)</option>
+                  <option value="Grade 9">Grade 9 (Llama 4 Scout)</option>
+                  <option value="Grade 10">Grade 10 (Llama 4 Scout)</option>
+                  <option value="Grade 11">Grade 11 (Llama 4 Scout)</option>
+                  <option value="Grade 12">Grade 12 (Matric - Llama 4 Scout)</option>
+                </select>
+              </div>
+
+              {/* DYNAMIC GRADE-ADJUSTMENT RECOMMENDATION ENGINE & MASTERY PATHWAY */}
+              {(() => {
+                const ageNum = Number(inputAge) || 12;
+                const expectedGradeNum = Math.max(0, Math.min(12, ageNum - 5));
+                const gradeNum = parseInt((inputGrade.match(/\d+/) || ["4"])[0], 10);
+                
+                let pathwayTitle = "🎯 On-Track Grade Mastery Pathway";
+                let pathwayDesc = "Balanced curriculum matched to student age and standard CAPS benchmarks.";
+                let badgeColor = "bg-emerald-500/10 border-emerald-500/30 text-emerald-300";
+                let icon = "🎯";
+
+                if (gradeNum > expectedGradeNum) {
+                  pathwayTitle = "🚀 Accelerated Mastery Pathway (Advanced / Gifted)";
+                  pathwayDesc = `Student is working ${gradeNum - expectedGradeNum} grade(s) ahead of age benchmark (${ageNum} yrs). Recommended for Accelerated Mode!`;
+                  badgeColor = "bg-amber-500/10 border-amber-500/30 text-amber-300";
+                  icon = "🚀";
+                } else if (gradeNum < expectedGradeNum) {
+                  pathwayTitle = "🌱 Foundational Mastery Pathway (Confidence Builder)";
+                  pathwayDesc = "Scaffolded step-by-step reinforcement to strengthen foundational math & science concepts securely.";
+                  badgeColor = "bg-blue-500/10 border-blue-500/30 text-blue-300";
+                  icon = "🌱";
+                }
+
+                return (
+                  <div className={`p-3 rounded-2xl border ${badgeColor} space-y-2.5 transition animate-in fade-in duration-200`}>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-base">{icon}</span>
+                        <div>
+                          <p className="text-[11px] font-black">{pathwayTitle}</p>
+                          <p className="text-[9px] text-slate-300">{pathwayDesc}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Accelerated Mode Toggle */}
+                    <div className="pt-2 border-t border-white/10 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm">⚡</span>
+                        <div>
+                          <p className="text-[10px] font-bold text-white">Unlock Accelerated Mode</p>
+                          <p className="text-[8px] text-slate-300">+25% XP multiplier, Olympiad challenges & high-difficulty AI</p>
+                        </div>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={inputAccelerated}
+                        onChange={(e) => setInputAccelerated(e.target.checked)}
+                        className="w-4 h-4 rounded accent-amber-500 cursor-pointer"
+                      />
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* DYNAMIC ENGINE TIER BADGE */}
               {(() => {
@@ -789,6 +987,71 @@ export const FusedCalcubossApp: React.FC = () => {
                   {apiStatus === 'online' ? '🟢 Online' : '⚠️ Offline Fallback Engaged'}
                 </span>
               </div>
+            </div>
+
+            {/* Local Ollama AI Squad (Dell OptiPlex Port 11434) */}
+            <div className="space-y-3 text-xs pt-3 border-t border-slate-800">
+              <div className="flex items-center justify-between">
+                <div>
+                  <label className="font-bold text-amber-300 flex items-center gap-1.5">
+                    <span>🦙 Local Ollama Squad (Port 11434)</span>
+                  </label>
+                  <p className="text-[10px] text-slate-400">Connect to your Dell OptiPlex offline AI models</p>
+                </div>
+                <input
+                  type="checkbox"
+                  defaultChecked={true}
+                  className="w-4 h-4 rounded accent-amber-500 cursor-pointer"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-[10px] text-slate-400 mb-1">Ollama URL:</label>
+                  <input
+                    type="text"
+                    defaultValue="http://localhost:11434/api/generate"
+                    className="w-full px-2.5 py-1.5 rounded-xl bg-slate-950 border border-slate-700 text-[11px] text-white font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] text-slate-400 mb-1">Teacher Model:</label>
+                  <select
+                    defaultValue="qwen2.5:1.5b"
+                    className="w-full px-2.5 py-1.5 rounded-xl bg-slate-950 border border-slate-700 text-[11px] text-white font-medium"
+                  >
+                    <option value="qwen2.5:1.5b">qwen2.5:1.5b (Fast Math)</option>
+                    <option value="gemma:2b">gemma:2b (Science & Botany)</option>
+                    <option value="llama3">llama3 (Deep Reasoning)</option>
+                  </select>
+                </div>
+              </div>
+
+              <button
+                onClick={async () => {
+                  setTestLog("🦙 Pinging Ollama at http://localhost:11434/api/generate...");
+                  try {
+                    const res = await fetch('http://localhost:11434/api/generate', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ model: 'qwen2.5:1.5b', prompt: 'ping test', stream: false })
+                    });
+                    if (res.ok) {
+                      setTestLog("🟢 Ollama Connected Successfully! Local Qwen2.5 / Gemma ready.");
+                      showToast("🟢 Ollama Local AI Squad Online!");
+                    } else {
+                      setTestLog("⚠️ Ollama responded with status " + res.status + ". Ensure $env:OLLAMA_ORIGINS='*' is set.");
+                      showToast("⚠️ Check Ollama CORS ($env:OLLAMA_ORIGINS='*')");
+                    }
+                  } catch (err) {
+                    setTestLog("⚠️ Local Ollama connection failed. Run 'ollama serve' with OLLAMA_ORIGINS=* in PowerShell.");
+                    showToast("⚠️ Make sure Ollama is running on port 11434");
+                  }
+                }}
+                className="w-full py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 font-bold text-xs transition border border-amber-500/40 flex items-center justify-center gap-1.5"
+              >
+                <span>⚡ Test Ollama Connection ($env:OLLAMA_ORIGINS="*")</span>
+              </button>
             </div>
 
             {/* Local TinyLlama VPS Configuration */}
@@ -934,6 +1197,128 @@ export const FusedCalcubossApp: React.FC = () => {
           showToast(`👑 ${plan.name} Activated! VIP Lifetime Access Unlocked.`);
         }}
       />
+
+      {/* PC KEYBOARD SHORTCUTS & DESKTOP CONTROLS MODAL */}
+      {showHotkeysModal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-in fade-in duration-150">
+          <div className="bg-slate-900 border border-indigo-500/30 rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl text-white animate-in zoom-in-95 duration-150">
+            <div className="flex justify-between items-center border-b border-slate-800 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-2xl bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 flex items-center justify-center text-lg">
+                  ⌨️
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-sm text-white flex items-center gap-2">
+                    <span>PC Desktop Shortcuts</span>
+                    <span className="text-[10px] bg-indigo-500/30 text-indigo-300 px-2 py-0.5 rounded-full border border-indigo-500/40 font-mono">
+                      FOUNDER 2026
+                    </span>
+                  </h3>
+                  <p className="text-[11px] text-slate-400">Quick keyboard commands for power users & students</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setShowHotkeysModal(false)} 
+                className="text-slate-400 hover:text-white text-sm font-bold p-1 rounded-lg hover:bg-slate-800 transition"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Layout Mode Switcher inside modal */}
+            <div className="p-3 bg-slate-950/80 rounded-2xl border border-slate-800 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <Monitor className="w-4 h-4 text-cyan-400" />
+                <div>
+                  <p className="text-xs font-bold text-slate-200">Current Display Layout</p>
+                  <p className="text-[10px] text-slate-400">{isPcWide ? 'Spacious 2-column Widescreen (12-Col Grid)' : 'Compact Mobile Phone Column'}</p>
+                </div>
+              </div>
+              <button
+                onClick={togglePcLayout}
+                className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-md transition flex items-center gap-1.5"
+              >
+                {isPcWide ? 'Switch to Compact' : 'Switch to Widescreen'}
+              </button>
+            </div>
+
+            {/* Shortcuts Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+              <div className="space-y-2 p-3 bg-slate-950/50 rounded-2xl border border-slate-800/80">
+                <p className="text-[11px] font-black text-amber-400 uppercase tracking-wider flex items-center gap-1">
+                  <span>🧭 Navigation</span>
+                </p>
+                <div className="space-y-1.5 text-slate-300">
+                  <div className="flex justify-between items-center">
+                    <span>Homework Room</span>
+                    <kbd className="px-2 py-0.5 bg-slate-800 border border-slate-700 rounded text-[10px] font-mono text-indigo-300 font-bold">Alt + 1</kbd>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span>OS6 Life Canvas</span>
+                    <kbd className="px-2 py-0.5 bg-slate-800 border border-slate-700 rounded text-[10px] font-mono text-indigo-300 font-bold">Alt + 2</kbd>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span>3D Puzzles</span>
+                    <kbd className="px-2 py-0.5 bg-slate-800 border border-slate-700 rounded text-[10px] font-mono text-indigo-300 font-bold">Alt + 3</kbd>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span>Creator Vault</span>
+                    <kbd className="px-2 py-0.5 bg-slate-800 border border-slate-700 rounded text-[10px] font-mono text-indigo-300 font-bold">Alt + 4</kbd>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span>Founder Dashboard</span>
+                    <kbd className="px-2 py-0.5 bg-slate-800 border border-slate-700 rounded text-[10px] font-mono text-indigo-300 font-bold">Alt + 5</kbd>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span>Community Feed</span>
+                    <kbd className="px-2 py-0.5 bg-slate-800 border border-slate-700 rounded text-[10px] font-mono text-indigo-300 font-bold">Alt + 6</kbd>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2 p-3 bg-slate-950/50 rounded-2xl border border-slate-800/80">
+                <p className="text-[11px] font-black text-purple-400 uppercase tracking-wider flex items-center gap-1">
+                  <span>🐱 Life Canvas / Angel</span>
+                </p>
+                <div className="space-y-1.5 text-slate-300">
+                  <div className="flex justify-between items-center">
+                    <span>Stage 1 (Chibi)</span>
+                    <kbd className="px-2 py-0.5 bg-slate-800 border border-slate-700 rounded text-[10px] font-mono text-purple-300 font-bold">1</kbd>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span>Stage 2 (Rogue Blade)</span>
+                    <kbd className="px-2 py-0.5 bg-slate-800 border border-slate-700 rounded text-[10px] font-mono text-purple-300 font-bold">2</kbd>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span>Stage 3 (Champion)</span>
+                    <kbd className="px-2 py-0.5 bg-slate-800 border border-slate-700 rounded text-[10px] font-mono text-purple-300 font-bold">3</kbd>
+                  </div>
+                  <div className="border-t border-slate-800/80 pt-1.5 mt-1.5">
+                    <p className="text-[10px] font-black text-cyan-400 uppercase tracking-wider mb-1">General</p>
+                    <div className="flex justify-between items-center text-[11px]">
+                      <span>Toggle This Help</span>
+                      <kbd className="px-2 py-0.5 bg-slate-800 border border-slate-700 rounded text-[10px] font-mono text-cyan-300 font-bold">?</kbd>
+                    </div>
+                    <div className="flex justify-between items-center text-[11px] mt-1">
+                      <span>Close Active Dialog</span>
+                      <kbd className="px-2 py-0.5 bg-slate-800 border border-slate-700 rounded text-[10px] font-mono text-cyan-300 font-bold">Esc</kbd>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="text-center pt-1">
+              <button
+                onClick={() => setShowHotkeysModal(false)}
+                className="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-750 text-slate-200 font-bold text-xs transition border border-slate-700"
+              >
+                Got It, Let's Build! 🚀
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

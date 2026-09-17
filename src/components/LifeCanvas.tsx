@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   Sparkles, 
   Palette, 
@@ -15,7 +15,8 @@ import {
   Flame,
   Award,
   Link2,
-  ExternalLink
+  ExternalLink,
+  Keyboard
 } from 'lucide-react';
 
 // Pre-generated High-Fidelity Fantasy RPG Artwork
@@ -244,8 +245,29 @@ export const LifeCanvas: React.FC<{ isVoiceEnabled?: boolean }> = ({ isVoiceEnab
     });
   };
 
+  // PC Keyboard Hotkeys: 1, 2, 3 to switch Angel stages instantly
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement)?.tagName)) return;
+      if (currentCanvas === 'angel') {
+        if (e.key === '1') {
+          setAngelStage(1);
+          handleModifyAction('levelUp');
+        } else if (e.key === '2') {
+          setAngelStage(2);
+          handleModifyAction('levelUp');
+        } else if (e.key === '3') {
+          setAngelStage(3);
+          handleModifyAction('levelUp');
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [currentCanvas]);
+
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-3xl p-4 sm:p-6 space-y-5 text-white shadow-2xl max-w-4xl mx-auto flex flex-col relative overflow-hidden">
+    <div className="bg-slate-900 border border-slate-800 rounded-3xl p-4 sm:p-6 space-y-5 text-white shadow-2xl w-full max-w-6xl mx-auto flex flex-col relative overflow-hidden">
       
       {/* Decorative cybernetic background glows */}
       <div className="absolute top-0 right-0 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
@@ -369,8 +391,10 @@ export const LifeCanvas: React.FC<{ isVoiceEnabled?: boolean }> = ({ isVoiceEnab
         </button>
       </div>
 
-      {/* --- THE MAIN LIFE CANVAS BOARD --- */}
-      <div className="bg-slate-950 rounded-3xl overflow-hidden relative border-4 border-slate-800 h-[360px] flex items-center justify-center shadow-inner relative z-10">
+      {/* --- PC STUDIO 2-COLUMN / MOBILE STACKED WORKSPACE --- */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+        {/* LEFT COLUMN: 3D LIFE CANVAS STAGE (STICKY ON PC) */}
+        <div className="lg:col-span-5 xl:col-span-5 bg-slate-950 rounded-3xl overflow-hidden relative border-4 border-slate-800 h-[380px] sm:h-[430px] lg:h-[520px] flex items-center justify-center shadow-inner relative z-10 lg:sticky lg:top-4">
         
         {/* Render Page: Angel the Cat (2026 Founder Mode) */}
         {currentCanvas === 'angel' && (
@@ -387,8 +411,8 @@ export const LifeCanvas: React.FC<{ isVoiceEnabled?: boolean }> = ({ isVoiceEnab
               <div className="absolute inset-0 bg-gradient-to-t from-blue-950/60 via-purple-950/30 to-transparent pointer-events-none z-0"></div>
             )}
 
-            {/* THREE PRIMARY SELECTION BUTTONS: STAGE 1, STAGE 2, STAGE 3 */}
-            <div className="absolute top-3 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1.5 p-1 bg-black/70 backdrop-blur-xl border border-white/15 rounded-2xl shadow-2xl">
+            {/* THREE PRIMARY SELECTION BUTTONS: STAGE 1, STAGE 2, STAGE 3 (WITH PC KEYBOARD HINTS) */}
+            <div className="absolute top-3 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1.5 p-1 bg-black/75 backdrop-blur-xl border border-white/15 rounded-2xl shadow-2xl">
               <button
                 id="selectStage1Btn"
                 onClick={() => {
@@ -400,10 +424,11 @@ export const LifeCanvas: React.FC<{ isVoiceEnabled?: boolean }> = ({ isVoiceEnab
                     ? 'bg-gradient-to-r from-amber-500 to-yellow-400 text-slate-950 shadow-[0_0_15px_rgba(245,158,11,0.7)] scale-105'
                     : 'text-amber-300/80 hover:text-amber-100 hover:bg-white/10'
                 }`}
-                title="Stage 1: Starter Kitten"
+                title="Stage 1: Starter Kitten (Press 1 on PC)"
               >
                 <span>🐱</span>
                 <span>Stage 1</span>
+                <kbd className="hidden sm:inline-block text-[9px] px-1.5 py-0.2 rounded bg-black/40 border border-white/20 font-mono text-amber-200">1</kbd>
               </button>
 
               <button
@@ -417,10 +442,11 @@ export const LifeCanvas: React.FC<{ isVoiceEnabled?: boolean }> = ({ isVoiceEnab
                     ? 'bg-gradient-to-r from-emerald-500 to-teal-400 text-slate-950 shadow-[0_0_15px_rgba(16,185,129,0.7)] scale-105'
                     : 'text-emerald-300/80 hover:text-emerald-100 hover:bg-white/10'
                 }`}
-                title="Stage 2: Chibi Rogue"
+                title="Stage 2: Chibi Rogue (Press 2 on PC)"
               >
                 <span>⚔️</span>
                 <span>Stage 2</span>
+                <kbd className="hidden sm:inline-block text-[9px] px-1.5 py-0.2 rounded bg-black/40 border border-white/20 font-mono text-emerald-200">2</kbd>
               </button>
 
               <button
@@ -434,10 +460,11 @@ export const LifeCanvas: React.FC<{ isVoiceEnabled?: boolean }> = ({ isVoiceEnab
                     ? 'bg-gradient-to-r from-cyan-400 to-blue-500 text-slate-950 shadow-[0_0_15px_rgba(59,130,246,0.8)] scale-105'
                     : 'text-cyan-300/80 hover:text-cyan-100 hover:bg-white/10'
                 }`}
-                title="Stage 3: Divine Champion"
+                title="Stage 3: Divine Champion (Press 3 on PC)"
               >
                 <span>👑</span>
                 <span>Stage 3</span>
+                <kbd className="hidden sm:inline-block text-[9px] px-1.5 py-0.2 rounded bg-black/40 border border-white/20 font-mono text-cyan-200">3</kbd>
               </button>
             </div>
 
@@ -516,6 +543,12 @@ export const LifeCanvas: React.FC<{ isVoiceEnabled?: boolean }> = ({ isVoiceEnab
                 {angelStage === 2 && '⚔️ Stage 2: Chibi Forest Warrior • Emerald Forest'}
                 {angelStage === 3 && '👑 Stage 3: Divine Champion Princess • Sapphire Glow'}
               </span>
+            </div>
+
+            {/* PC Hotkey Helper Badge */}
+            <div className="hidden md:flex items-center gap-1.5 absolute bottom-4 right-4 bg-black/75 backdrop-blur-md px-2.5 py-1.5 rounded-xl border border-white/10 text-[10px] text-slate-300 font-mono z-20 shadow-md">
+              <Keyboard className="w-3.5 h-3.5 text-cyan-400" />
+              <span>PC: Press 1, 2, 3</span>
             </div>
 
             {/* Custom URL Drawer Button */}
@@ -683,11 +716,11 @@ export const LifeCanvas: React.FC<{ isVoiceEnabled?: boolean }> = ({ isVoiceEnab
             </div>
           </div>
         )}
-      </div>
+        </div>
 
-      {/* --- INTERACTIVE PIECE TRAY --- */}
-      <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-3 relative z-10">
-        <p className="text-xs font-black text-indigo-400 uppercase tracking-wide flex items-center gap-1.5">
+        {/* RIGHT COLUMN: INTERACTIVE PIECE TRAY & STUDIO CONTROLS */}
+        <div className="lg:col-span-7 xl:col-span-7 bg-slate-950 p-4 sm:p-5 rounded-2xl border border-slate-800 space-y-3 relative z-10">
+          <p className="text-xs font-black text-indigo-400 uppercase tracking-wide flex items-center gap-1.5">
           <span>📦 Tap to Modify Your Canvas</span>
           <span className="text-[9px] bg-slate-900 text-slate-400 px-1.5 py-0.5 rounded border border-slate-800">
             Rewards +10 Coins!
@@ -1260,6 +1293,7 @@ export const LifeCanvas: React.FC<{ isVoiceEnabled?: boolean }> = ({ isVoiceEnab
           </div>
         )}
       </div>
+    </div>
 
       {/* --- PRETTY SHOP DIALOG OVERLAY MODAL --- */}
       {isShopOpen && (

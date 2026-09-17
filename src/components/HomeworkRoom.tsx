@@ -311,6 +311,34 @@ export const HomeworkRoom: React.FC<HomeworkRoomProps> = ({
       reply = `Hello ${profile.name}! As ${teacher.name} (${teacher.title}), I'm ready to help you master "${textToSend}". What is your first hypothesis?`;
     }
 
+    // If an image is attached, try local Moondream Vision API on port 11434
+    if (attachedFile && attachedFile.dataUrl && attachedFile.type?.startsWith('image/')) {
+      try {
+        const base64Data = attachedFile.dataUrl.includes(',') 
+          ? attachedFile.dataUrl.split(',')[1] 
+          : attachedFile.dataUrl;
+
+        const visionRes = await fetch('http://localhost:11434/api/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model: 'moondream',
+            prompt: textToSend || 'Describe this worksheet, math diagram, or handwritten steps in detail for a student.',
+            images: [base64Data],
+            stream: false
+          })
+        });
+        if (visionRes.ok) {
+          const visionData = await visionRes.json();
+          if (visionData.response) {
+            reply = `👁️ [Local Moondream Vision Analysis - Port 11434]:\n${visionData.response}`;
+          }
+        }
+      } catch (err) {
+        console.log("Local Moondream vision offline, falling back to standard AI router.");
+      }
+    }
+
     // Try cloud API if reachable
     try {
       const controller = new AbortController();
